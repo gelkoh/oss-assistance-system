@@ -1,0 +1,23 @@
+{
+    "name": "oss-assistance-system",
+    "version": "1.0.0",
+    "description": "Work in progress...",
+    "main": "main.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "electron ."
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/gelkoh/oss-assistance-system.git"
+    },
+    "author": "Ole Kirchner",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/gelkoh/oss-assistance-system/issues"
+    },
+    "homepage": "https://github.com/gelkoh/oss-assistance-system#readme",
+    "devDependencies": {
+        "electron": "^38.2.2"
+    }
+}
