@@ -139,3 +139,15 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Thesis files
+# TeX, snapshot, and latexmk generated files
+*.aux
+*.dep
+*.fdb_latexmk
+*.log
+*.out
+*.synctex.gz
+*.log
+*.fls
+*.pdf
