@@ -1,6 +1,6 @@
 <template>
     <h1>Hello World!</h1>
-    <button @click="openRepo" :disabled="isLoading">Open Repository</button>
+    <button @click="openRepo" :disabled="isLoading" class="bg-green-500 px-4 py-2">Open Repository</button>
 </template>
 
 <script setup>
