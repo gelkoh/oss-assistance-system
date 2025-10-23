@@ -6,7 +6,7 @@
     "type": "module",
     "scripts": {
         "start-renderer": "cross-env VITE_DEV_SERVER=1 vite",
-        "start-main": "cross-env VITE_DEV_SERVER=1 concurrently \"wait-on tcp:5173 && electron .\"",
+        "start-main": "cross-env VITE_DEV_SERVER=1 concurrently \"wait-on tcp:5173 && electron --inspect=9229 .\"",
         "start": "concurrently \"npm run start-renderer\" \"npm run start-main\"",
         "test": "echo \"Error: no test specified\" && exit 1",
         "watch:css": "npx @tailwindcss/cli -i ./css/input.css -o ./css/output.css --watch"
