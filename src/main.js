@@ -9,6 +9,8 @@ const __dirname = path.dirname(__filename)
 function readCodeFilesRecursively(dir) {
     let results = []
 
+    if (dir.includes("node_modules")) return results
+
     const list = fs.readdirSync(dir, { withFileTypes: true })
 
     for (const entry of list) {
