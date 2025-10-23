@@ -1,12 +1,14 @@
 <template>
     <div>
         <div v-for="file in files" :key="file">
-            {{ file.name }}
+            <File /> {{ file.name }}
         </div>
     </div>
 </template>
 
 <script setup>
+    import { File } from 'lucide-vue-next';
+
     defineProps({
         files: {
             type: Array,
