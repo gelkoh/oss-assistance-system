@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "Work in progress...",
     "main": "main.js",
+    "type": "module",
     "scripts": {
         "start-renderer": "cross-env VITE_DEV_SERVER=1 vite",
         "start-main": "cross-env VITE_DEV_SERVER=1 concurrently \"wait-on tcp:5173 && electron .\"",
