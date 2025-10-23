@@ -1,15 +1,38 @@
+
 <template>
     <h1>Hello World!</h1>
     <button @click="openRepo" :disabled="isLoading" class="bg-green-500 px-4 py-2">Open Repository</button>
+
+    <FileTree :files="fileList" v-if="fileList.length > 0" />
 </template>
 
 <script setup>
     import { ref, onMounted } from "vue"
+    import path from "path"
+    import FileTree from "./components/FileTree.vue"
 
-    const isLoading = ref(false);
-    const error = ref(null);
-    const repoPath = ref("");
-    const fileList = ref([]);
+    const isLoading = ref(false)
+    const error = ref(null)
+    const repoPath = ref("")
+    const fileList = ref([])
+
+    const readRepoContent = async (path) => {
+        isLoading.value = true
+        error.value = null
+        fileList.value = []
+
+        try {
+            const tree = await window.api.readDirectoryContent(path)
+
+            fileList.value = tree
+            console.log("Directory tree loaded:", tree)
+        } catch(err) {
+            error.value = `File access error: ${err.message || err}`
+            console.error(error.value, err)
+        } finally {
+            isLoading.value = false
+        }
+    }
 
     onMounted(() => {
         if (typeof window.api === "undefined")  {
@@ -28,19 +51,7 @@
             repoPath.value = path
             error.value = null
             console.log(repoPath.value)
-            window.api.readDirectoryContent(repoPath.value)
-        })
-
-        window.api.onDirectoryContentReady((list) => {
-            isLoading.value = false
-            error.value = null
-            console.log(list)
-        })
-
-        window.api.onDirectoryContentError((err) => {
-            isLoading.value = false
-            error.value = `File access error: ${err}`
-            fileList.value = []
+            readRepoContent(repoPath.value)
         })
     })
 

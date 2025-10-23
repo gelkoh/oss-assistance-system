@@ -28,12 +28,32 @@ function readCodeFilesRecursively(dir) {
     return results
 }
 
+function buildTree(dirPath) {
+    const stats = fs.statSync(dirPath);
+    if (!stats.isDirectory()) return null;
+
+    const files = fs.readdirSync(dirPath, { withFileTypes: true });
+    return files.map((entry) => {
+        const fullPath = path.join(dirPath, entry.name);
+        const isDir = entry.isDirectory();
+
+        return {
+            name: entry.name,
+            path: fullPath,
+            type: isDir ? "directory" : "file",
+            children: isDir ? buildTree(fullPath) : []
+        }
+    })
+}
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 800,
         height: 600,
         webPreferences: {
-            preload: path.join(__dirname, "preload.js")
+            preload: path.join(__dirname, "preload.js"),
+            contextIsolation: true,
+            sandbox: true,
         }
     })
 
@@ -59,16 +79,16 @@ function createWindow() {
         }
     })
 
-    ipcMain.on("read-directory-content", (event, repoPath) => {
-        console.log("Reading directory: ", repoPath)
+    ipcMain.handle("read-directory-tree", (event, repoPath) => {
+        console.log("Building tree directory for: ", repoPath)
 
         try {
-            const fileList = readCodeFilesRecursively(repoPath)
-            console.log("Found " + fileList.length + " files")
-            event.sender.send("directory-content-ready", fileList)
+            const tree = buildTree(repoPath)
+            console.log(tree)
+            return tree
         } catch(err) {
-            console.error("Error reading directory: " + err)
-            event.sender.send("directory-content-error", err.message)
+            console.error("Error building directory tree: " + err)
+            throw new Error(err.message)
         }
     })
 }
