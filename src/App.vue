@@ -1,9 +1,24 @@
 
 <template>
-    <h1>Hello World!</h1>
-    <button @click="openRepo" :disabled="isLoading" class="bg-green-500 px-4 py-2">Open Repository</button>
+    <div>
+        <div v-if="fileList.length === 0" class="min-h-screen flex justify-center items-center flex-col">
+            <h1 class="text-2xl text-white">Open source assistance system</h1>
 
-    <FileTree :files="fileList" v-if="fileList.length > 0" />
+            <div class="text-6xl text-center font-bold text-white">
+                <h2 class="mt-2">
+                    Open a code repository<br /> to get started
+                </h2>
+            </div>
+
+            <button @click="openRepo" :disabled="isLoading" class="mt-8 bg-orange-500 px-4 py-2 rounded-sm">Open Repository</button>
+        </div>
+
+        <ul v-else class="bg-neutral-900 max-w-100">
+            <li v-for="file in fileList">
+                <FileTree :file />
+            </li>
+        </ul>
+    </div>
 </template>
 
 <script setup>

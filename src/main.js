@@ -6,33 +6,20 @@ import { fileURLToPath } from "url"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-function readCodeFilesRecursively(dir) {
-    let results = []
-
-    if (dir.includes("node_modules")) return results
-
-    const list = fs.readdirSync(dir, { withFileTypes: true })
-
-    for (const entry of list) {
-        const fullPath = path.join(dir, entry.name)
-
-        if (entry.isDirectory()) {
-            results = results.concat(readCodeFilesRecursively(fullPath))
-        } else {
-            if (/\.(js|ts|vue|json|html|css|scss|md)$/i.test(entry.name)) {
-                results.push(fullPath)
-            }
-        }
-    }
-
-    return results
-}
-
 function buildTree(dirPath) {
     const stats = fs.statSync(dirPath);
     if (!stats.isDirectory()) return null;
 
-    const files = fs.readdirSync(dirPath, { withFileTypes: true });
+    let files = fs.readdirSync(dirPath, { withFileTypes: true });
+
+    files = files.filter(entry => {
+        if (entry.isDirectory() && entry.name === "node_modules") {
+            return false
+        }
+
+        return true
+    })
+    
     return files.map((entry) => {
         const fullPath = path.join(dirPath, entry.name);
         const isDir = entry.isDirectory();
@@ -44,6 +31,19 @@ function buildTree(dirPath) {
             children: isDir ? buildTree(fullPath) : []
         }
     })
+}
+
+function buildRepoTreeWrapper(repoPath) {
+    const dirName = path.basename(repoPath)
+
+    const children = buildTree(repoPath)
+
+    return {
+        name: dirName,
+        path: repoPath,
+        type: "directory",
+        children: children || []
+    }
 }
 
 function createWindow() {
@@ -83,9 +83,8 @@ function createWindow() {
         console.log("Building tree directory for: ", repoPath)
 
         try {
-            const tree = buildTree(repoPath)
-            console.log(tree)
-            return tree
+            const treeRoot = buildRepoTreeWrapper(repoPath)
+            return [treeRoot]
         } catch(err) {
             console.error("Error building directory tree: " + err)
             throw new Error(err.message)
@@ -99,7 +98,7 @@ app.whenReady().then(() => {
     app.on("activate", () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
-});
+})
 
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit()
