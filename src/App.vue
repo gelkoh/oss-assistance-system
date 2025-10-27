@@ -13,11 +13,15 @@
             <button @click="openRepo" :disabled="isLoading" class="mt-8 bg-orange-500 px-4 py-2 rounded-sm">Open Repository</button>
         </div>
 
-        <ul v-else class="bg-neutral-900 max-w-100">
-            <li v-for="file in fileList">
-                <FileTree :file />
-            </li>
-        </ul>
+        <div v-else class="flex gap-4 p-2">
+            <ul class="bg-neutral-900 max-w-100">
+                <li v-for="file in fileList">
+                    <FileTree :file class="p-4 min-w-xs" @file-selected="updateSelectedFilePath"/>
+                </li>
+            </ul>
+
+            <FileContents :filePath="selectedFilePath" />
+        </div>
     </div>
 </template>
 
@@ -25,19 +29,22 @@
     import { ref, onMounted } from "vue"
     import path from "path"
     import FileTree from "./components/FileTree.vue"
+    import FileContents from "./components/FileContents.vue"
 
     const isLoading = ref(false)
     const error = ref(null)
     const repoPath = ref("")
     const fileList = ref([])
 
-    const readRepoContent = async (path) => {
+    const selectedFilePath = ref("")
+
+    const readRepoContents = async (path) => {
         isLoading.value = true
         error.value = null
         fileList.value = []
 
         try {
-            const tree = await window.api.readDirectoryContent(path)
+            const tree = await window.api.readDirectoryContents(path)
 
             fileList.value = tree
             console.log("Directory tree loaded:", tree)
@@ -47,6 +54,15 @@
         } finally {
             isLoading.value = false
         }
+    }
+
+    const updateSelectedFilePath  = (filePath) => {
+        console.log("Update selected file path")
+        console.log(filePath)
+        console.log(selectedFilePath.value)
+        selectedFilePath.value = filePath
+        console.log("----")
+        console.log(selectedFilePath.value)
     }
 
     onMounted(() => {
@@ -66,7 +82,7 @@
             repoPath.value = path
             error.value = null
             console.log(repoPath.value)
-            readRepoContent(repoPath.value)
+            readRepoContents(repoPath.value)
         })
     })
 

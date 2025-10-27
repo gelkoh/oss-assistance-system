@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from "electron"
 import path from "path"
 import fs from "fs"
+import { readFile } from "fs/promises"
 import { fileURLToPath } from "url"
 
 const __filename = fileURLToPath(import.meta.url)
@@ -88,6 +89,16 @@ function createWindow() {
         } catch(err) {
             console.error("Error building directory tree: " + err)
             throw new Error(err.message)
+        }
+    })
+
+    ipcMain.handle("read-file-contents", async (event, filePath) => {
+        try {
+            const data = await readFile(filePath, "utf-8")
+            return data
+        } catch(err) {
+            console.error(`An error occurred reading the file contents for ${filePath}:`, err)
+            throw new Error(`Could not read file: ${err.message}`)
         }
     })
 }
