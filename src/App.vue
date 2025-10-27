@@ -13,14 +13,23 @@
             <button @click="openRepo" :disabled="isLoading" class="mt-8 bg-orange-500 px-4 py-2 rounded-sm">Open Repository</button>
         </div>
 
-        <div v-else class="flex gap-4 p-2">
+        <div v-else class="flex gap-4 p-2 min-h-screen">
             <ul class="bg-neutral-900 max-w-100">
                 <li v-for="file in fileList">
                     <FileTree :file class="p-4 min-w-xs" @file-selected="updateSelectedFilePath"/>
                 </li>
             </ul>
 
-            <FileContents :filePath="selectedFilePath" />
+            <div class="grow flex flex-col">
+                <div class="flex gap-2">
+                    <button :class="{ 'bg-orange-500': isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = true">Canvas View</button>
+                    <button :class="{ 'bg-orange-500': !isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = false">File View</button>
+                </div>
+
+                <Canvas v-if="isCanvasView" />
+
+                <FileContents v-else :filePath="selectedFilePath" />
+            </div>
         </div>
     </div>
 </template>
@@ -30,11 +39,14 @@
     import path from "path"
     import FileTree from "./components/FileTree.vue"
     import FileContents from "./components/FileContents.vue"
+    import Canvas from "./components/Canvas.vue"
 
     const isLoading = ref(false)
     const error = ref(null)
     const repoPath = ref("")
     const fileList = ref([])
+
+    const isCanvasView = ref(true)
 
     const selectedFilePath = ref("")
 
@@ -57,12 +69,7 @@
     }
 
     const updateSelectedFilePath  = (filePath) => {
-        console.log("Update selected file path")
-        console.log(filePath)
-        console.log(selectedFilePath.value)
         selectedFilePath.value = filePath
-        console.log("----")
-        console.log(selectedFilePath.value)
     }
 
     onMounted(() => {

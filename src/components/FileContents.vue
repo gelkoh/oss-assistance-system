@@ -1,9 +1,15 @@
 <template>
-    <div class="p-4 grow bg-neutral-900">
-        File Contents
+    <div class="p-4 grow bg-neutral-900 mt-2">
+        <div v-if="fileContents !== ''">
+            File Contents
 
-        <div class="mt-4">
-            <highlightjs v-if="fileContents !== ''" autodetect :code="fileContents" />
+            <div class="mt-4">
+                <highlightjs v-if="fileContents !== ''" autodetect :code="fileContents" class="whitespace-pre-wrap overflow-y-auto max-h-[800px]" />
+            </div>
+        </div>
+
+        <div v-else>
+            Open a file to get started
         </div>
     </div>
 </template>

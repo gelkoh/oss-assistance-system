@@ -6,7 +6,6 @@
             {{ file.name }}
         </div>
 
-        <!--<div v-else @click="$emit('file-selected', props.file.path)">-->
         <div v-else @click="$emit('file-selected', file.path)">
             <File :size="22" class="inline-block" />
             {{ file.name }}
