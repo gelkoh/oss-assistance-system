@@ -3,13 +3,14 @@
         File Contents
 
         <div class="mt-4">
-            <pre class="overflow-auto"><code>{{ fileContents }}</code></pre>
+            <highlightjs v-if="fileContents !== ''" autodetect :code="fileContents" />
         </div>
     </div>
 </template>
 
 <script setup>
     import { ref, watch } from "vue"
+    import hljs from "highlight.js"
 
     const props = defineProps({
         filePath: String
@@ -24,7 +25,6 @@
         try {
             const fileContentsString = await window.api.readFileContents(path)
             fileContents.value = fileContentsString
-            console.log(fileContentsString)
             console.log("File contents loaded successfully")
         } catch(err) {
             error.value = `Failed to load file contents: ${err.message}`
