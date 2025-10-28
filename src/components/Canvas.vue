@@ -1,32 +1,51 @@
 <template>
-    <div class="mt-2 p-4 bg-neutral-900 grow">
-        <div ref="container" class="w-full h-full" />
-    </div>
+    <div ref="container" class="w-full h-full bg-neutral-900"></div>
 </template>
 
 <script setup>
-    import { onMounted, ref } from "vue"
     import * as d3 from "d3"
+    import { onMounted, ref, watch } from "vue"
 
     const props = defineProps({
-        fileTree: Object
+    fileTree: {
+        type: Object,
+        required: true
+    }
     })
+
+    const emit = defineEmits(["open-file"])
 
     const container = ref(null)
 
     onMounted(() => {
-        const data = {
-            name: "root",
-            children: [
-                { name: "src", children: [{ name: "main.js" }, { name: "App.vue" }] },
-                { name: "public", children: [{ name: "index.html" }] }
-            ]
-        }
+        renderTree(props.fileTree.children[0])
+    })
 
+    let colorIndex = 0
+    const colors = ["red",
+                    "orange",
+                    "amber",
+                    "yellow",
+                    "lime",
+                    "green",
+                    "emerald",
+                    "teal",
+                    "cyan",
+                    "sky",
+                    "blue",
+                    "indigo",
+                    "violet",
+                    "purple",
+                    "fuchsia",
+                    "pink",
+                    "rose"]
+
+    function renderTree(fileTree) {
+        d3.select(container.value).selectAll("*").remove()
+
+        const data = fileTree
         const width = container.value.clientWidth
         const height = container.value.clientHeight
-
-        console.log(props.fileTree)
 
         const svg = d3
             .select(container.value)
@@ -34,69 +53,135 @@
             .attr("width", width)
             .attr("height", height)
             .call(
-                d3.zoom().on("zoom", (event) => {
-                    g.attr("transform", event.transform)
-                })
+                d3.zoom().scaleExtent([0.2, 2]).on("zoom", (event) => g.attr("transform", event.transform))
             )
 
-        const g = svg.append("g")
+        const g = svg.append("g").attr("transform", "translate(100, 50)")
 
-        //const root = d3.hierarchy(props.fileTree)
-        const root = d3.hierarchy({
-            name: "root",
-            children: props.fileTree
-        })
-
-        const treeLayout = d3.tree().size([height, width - 160])
+        const root = d3.hierarchy(data)
+        const treeLayout = d3.tree().nodeSize([40, 160])
         treeLayout(root)
 
-        g.selectAll(".link")
-            .data(root.links())
-            .join("path")
-            .attr("class", "link")
-            .attr("fill", "none")
-            .attr("stroke", "#555")
-            .attr("stroke-opacity", 0.6)
-            .attr("stroke-width", 1.5)
-            .attr(
-                "d",
-                d3
-                    .linkHorizontal()
-                    .x((d) => d.y)
-                    .y((d) => d.x)
+        drawNode(root, g)
+    }
+
+    function drawNode(node, parentGroup) {
+        const group = parentGroup.append("g").attr("class", "dir-group")
+
+        // Draw children first (recursively)
+        if (node.children) {
+            node.children.forEach((child) => {
+                drawNode(child, group)
+            })
+        }
+
+        // Find bounds of all children to draw a background rect
+        const childNodes = group.selectAll("g.dir-group").nodes()
+        let bounds = null
+        if (childNodes.length > 0) {
+            const bbox = childNodes[0].getBBox()
+            bounds = childNodes.slice(1).reduce(
+                (acc, n) => {
+                    const b = n.getBBox()
+                    acc.x0 = Math.min(acc.x0, b.x)
+                    acc.y0 = Math.min(acc.y0, b.y)
+                    acc.x1 = Math.max(acc.x1, b.x + b.width)
+                    acc.y1 = Math.max(acc.y1, b.y + b.height)
+                    return acc
+                },
+                {
+                    x0: bbox.x,
+                    y0: bbox.y,
+                    x1: bbox.x + bbox.width,
+                    y1: bbox.y + bbox.height
+                }
             )
+        }
 
-        const node = g
-            .selectAll(".node")
-            .data(root.descendants())
-            .join("g")
+        // Background rectangle for directories
+        if (node.data.type === "directory" && bounds) {
+            const paddingX = 16
+            const paddingY = 20
+
+            group
+                .insert("rect", ":first-child")
+                    .attr("x", bounds.x0 - 20)
+                    .attr("y", bounds.y0 - 30)
+                    .attr("width", bounds.x1 - bounds.x0 + 40)
+                    .attr("height", bounds.y1 - bounds.y0 + 60)
+                    .attr("rx", 8)
+                    .style("fill", getColor(colorIndex, 950))
+                    .attr("opacity", 0.5)
+                    .style("stroke", getColor(colorIndex, 500))
+
+            colorIndex++
+
+            group
+                .append("text")
+                .attr("x", bounds.x0 - paddingX + 8)
+                .attr("y", bounds.y0 - paddingY + 14)
+                .attr("font-size", 12)
+                .attr("font-family", "monospace")
+                .attr("fill", "white")
+                .text(node.data.name + "/")
+        }
+
+        // Node position
+        const x = node.y
+        const y = node.x
+
+        const nodeG = group
+            .append("g")
+            .attr("transform", `translate(${x},${y})`)
             .attr("class", "node")
-            .attr("transform", (d) => `translate(${d.y},${d.x})`)
-
-        node
-            .append("circle")
-            .attr("r", 6)
-            .attr("fill", (d) => (d.children ? "#f97316" : "#aaa"))
-            .attr("stroke", "#222")
-            .on("click", (event, d) => {
-                alert(`Clicked on: ${d.data.name}`)
+            .style("cursor", "pointer")
+            .on("click", (event) => {
+            event.stopPropagation()
+                if (node.data.type === "directory") {
+                    // TODO: Expand/collapse behavior here
+                } else {
+                    emit("open-file", node.data.path)
+                }
             })
 
-        node
-            .append("text")
-            .attr("dy", "0.31em")
-            .attr("x", (d) => (d.children ? -10 : 10))
-            .attr("text-anchor", (d) => (d.children ? "end" : "start"))
-            .text((d) => d.data.name)
-            .attr("fill", "white")
-            .clone(true)
-            .lower()
-            .attr("stroke", "black")
-    })
+
+        if (node.data.type === "file") {
+            // Draw node rectangle
+            nodeG
+                .append("rect")
+                .attr("width", 736)
+                .attr("height", 24)
+                .attr("y", -12)
+                .attr("rx", 4)
+                .attr("fill", getColor(colorIndex, 500))
+
+            nodeG
+                .append("text")
+                .attr("dy", "0.32em")
+                .attr("x", 10)
+                .text(node.data.name)
+                .attr("fill", "white")
+        }
+
+        function toggleChildren(d) {
+            if (d.children) {
+                d._children = d.children
+                d.children = null
+            } else {
+                d.children = d._children
+                d._children = null
+            }
+        }
+    }
+
+    function getColor(colorIndex, lightness) {
+        return `var(--color-${colors[colorIndex]}-${lightness})`
+    }
 </script>
 
 <style scoped>
-    .link {
-        stroke: #666;
+    .node text {
+        font-family: monospace;
+        font-size: 12px;
     }
 </style>

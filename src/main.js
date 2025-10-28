@@ -8,10 +8,10 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 function buildTree(dirPath) {
-    const stats = fs.statSync(dirPath);
-    if (!stats.isDirectory()) return null;
+    const stats = fs.statSync(dirPath)
+    if (!stats.isDirectory()) return null
 
-    let files = fs.readdirSync(dirPath, { withFileTypes: true });
+    let files = fs.readdirSync(dirPath, { withFileTypes: true })
 
     files = files.filter(entry => {
         if (entry.isDirectory() && entry.name === "node_modules") {
@@ -20,10 +20,10 @@ function buildTree(dirPath) {
 
         return true
     })
-    
+ 
     return files.map((entry) => {
-        const fullPath = path.join(dirPath, entry.name);
-        const isDir = entry.isDirectory();
+        const fullPath = path.join(dirPath, entry.name)
+        const isDir = entry.isDirectory()
 
         return {
             name: entry.name,
@@ -40,10 +40,13 @@ function buildRepoTreeWrapper(repoPath) {
     const children = buildTree(repoPath)
 
     return {
-        name: dirName,
-        path: repoPath,
-        type: "directory",
-        children: children || []
+        name: "root",
+        children: [{
+            name: dirName,
+            path: repoPath,
+            type: "directory",
+            children: children || []
+        }]
     }
 }
 
@@ -85,7 +88,9 @@ function createWindow() {
 
         try {
             const treeRoot = buildRepoTreeWrapper(repoPath)
-            return [treeRoot]
+            console.log("Tree root:")
+            console.log(treeRoot)
+            return treeRoot
         } catch(err) {
             console.error("Error building directory tree: " + err)
             throw new Error(err.message)

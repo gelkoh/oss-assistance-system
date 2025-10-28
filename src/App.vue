@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="fileTree.length === 0" class="min-h-screen flex justify-center items-center flex-col">
+        <div v-if="fileTree === undefined || Object.keys(fileTree).length === 0" class="min-h-screen flex justify-center items-center flex-col">
             <h1 class="text-2xl text-white">Open source assistance system</h1>
 
             <div class="text-6xl text-center font-bold text-white">
@@ -14,7 +14,7 @@
 
         <div v-else class="flex gap-4 p-2 min-h-screen">
             <ul class="bg-neutral-900 max-w-100">
-                <li v-for="file in fileTree">
+                <li v-for="file in fileTree.children">
                     <FileTree :file class="p-4 min-w-xs" @file-selected="updateSelectedFilePath"/>
                 </li>
             </ul>
@@ -43,7 +43,7 @@
     const isLoading = ref(false)
     const error = ref(null)
     const repoPath = ref("")
-    const fileTree = ref([])
+    const fileTree = ref({})
 
     const isCanvasView = ref(true)
 
@@ -52,10 +52,13 @@
     const readRepoContents = async (path) => {
         isLoading.value = true
         error.value = null
-        fileTree.value = []
+        fileTree.value = {}
 
         try {
             const tree = await window.api.readDirectoryContents(path)
+            console.log("TREE: ")
+            console.log(tree)
+            console.log(typeof tree)
 
             fileTree.value = tree
         } catch(err) {

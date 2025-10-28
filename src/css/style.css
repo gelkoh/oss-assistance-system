@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@source inline("bg-red-{500,950}");
+@source inline("bg-orange-{500,950}");
+@source inline("bg-amber-{500,950}");
+@source inline("bg-yellow-{500,950}");
+@source inline("bg-lime-{500,950}");
+@source inline("bg-green-{500,950}");
+@source inline("bg-emerald-{500,950}");
+@source inline("bg-teal-{500,950}");
+@source inline("bg-cyan-{500,950}");
+@source inline("bg-sky-{500,950}");
+@source inline("bg-blue-{500,950}");
+@source inline("bg-indigo-{500,950}");
+@source inline("bg-violet-{500,950}");
+@source inline("bg-purple-{500,950}");
+@source inline("bg-green-{500,950}");
+@source inline("bg-pink-{500,950}");
+@source inline("bg-rose-{500,950}");
+
 html {
     color: white;
     background: black;
