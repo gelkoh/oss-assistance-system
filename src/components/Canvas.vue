@@ -1,5 +1,10 @@
 <template>
-    <div ref="container" class="w-full h-full bg-neutral-900"></div>
+    <div ref="container" class="absolute top-0 left-0 w-full h-full -z-10">
+        <!--<div v-for="num in 20" class="w-px h-full bg-red-500 absolute left-{{num}} top-10">
+
+        </div>-->
+        <div ref="backgroundDots" />
+    </div>
 </template>
 
 <script setup>
@@ -19,6 +24,7 @@
     const emit = defineEmits(["open-file"])
 
     const container = ref(null)
+    const backgroundDots = ref(null)
 
     onMounted(() => {
         renderTree(props.fileTree.children[0])
@@ -58,6 +64,27 @@
             .call(
                 d3.zoom().scaleExtent([0.2, 2]).on("zoom", (event) => g.attr("transform", event.transform))
             )
+
+        // Background dots
+        const defs = svg.append("defs")
+
+        defs.append("pattern")
+            .attr("id", "dot-grid")
+            .attr("width", 30)
+            .attr("height", 30)
+            .attr("patternUnits", "userSpaceOnUse")
+
+            .append("circle")
+            .attr("cx", 2)
+            .attr("cy", 2)
+            .attr("r", 1)
+            .style("fill", "#444")
+
+        svg.append("rect")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("fill", "url(#dot-grid)")
+            .style("pointer-events", "none")
 
         const g = svg.append("g").attr("transform", "translate(100, 50)")
 

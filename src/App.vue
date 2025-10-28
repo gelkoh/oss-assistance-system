@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="fileTree === undefined || Object.keys(fileTree).length === 0" class="min-h-screen flex justify-center items-center flex-col">
+        <div v-if="fileTree === undefined || Object.keys(fileTree).length === 0" class="flex justify-center items-center flex-col">
             <h1 class="text-2xl text-white">Open source assistance system</h1>
 
             <div class="text-6xl text-center font-bold text-white">
@@ -12,19 +12,19 @@
             <button @click="openRepo" :disabled="isLoading" class="mt-8 bg-orange-500 px-4 py-2 rounded-sm">Open Repository</button>
         </div>
 
-        <div v-else class="flex gap-4 p-2 min-h-screen">
-            <ul class="bg-neutral-900 max-w-100">
+        <div v-else>
+            <ul class="absolute top-6 left-6 bg-neutral-800/85 max-w-100 rounded-md border border-neutral-500 backdrop-blur-sm py-2">
                 <li v-for="file in fileTree.children">
-                    <FileTree :file class="p-4 min-w-xs" @file-selected="updateSelectedFilePath"/>
+                    <FileTree :file class="min-w-xs border-none before:hidden after:hidden py-1" @file-selected="updateSelectedFilePath"/>
                 </li>
             </ul>
 
-            <div class="grow flex flex-col">
-                <div class="flex gap-2">
-                    <button :class="{ 'bg-orange-500': isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = true">Canvas View</button>
-                    <button :class="{ 'bg-orange-500': !isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = false">File View</button>
-                </div>
+            <!--<div class="absolute flex gap-2 top-4 left-[50%] -translate-x-[50%]">
+                <button :class="{ 'bg-orange-500': isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = true">Canvas View</button>
+                <button :class="{ 'bg-orange-500': !isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = false">File View</button>
+            </div>-->
 
+            <div>
                 <Canvas v-if="isCanvasView" :fileTree />
 
                 <FileContents v-else :filePath="selectedFilePath" />
