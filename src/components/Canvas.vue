@@ -1,8 +1,5 @@
 <template>
     <div ref="container" class="absolute top-0 left-0 w-full h-full -z-10">
-        <!--<div v-for="num in 20" class="w-px h-full bg-red-500 absolute left-{{num}} top-10">
-
-        </div>-->
         <div ref="backgroundDots" />
     </div>
 </template>
@@ -59,8 +56,10 @@
         const svg = d3
             .select(container.value)
             .append("svg")
-            .attr("width", width)
-            .attr("height", height)
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("preserveAspectRatio", "xMinYMin meet")
+            .classed("svg-content-responsive", true)
             .call(
                 d3.zoom().scaleExtent([0.2, 2]).on("zoom", (event) => g.attr("transform", event.transform))
             )
@@ -232,7 +231,8 @@
     }
 
     function getColor(colorIndex, lightness) {
-        return `var(--color-${colors[colorIndex]}-${lightness})`
+        const index = colorIndex % (colors.length - 1)
+        return `var(--color-${colors[index]}-${lightness})`
     }
 </script>
 
