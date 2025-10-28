@@ -1,7 +1,6 @@
-
 <template>
     <div>
-        <div v-if="fileList.length === 0" class="min-h-screen flex justify-center items-center flex-col">
+        <div v-if="fileTree.length === 0" class="min-h-screen flex justify-center items-center flex-col">
             <h1 class="text-2xl text-white">Open source assistance system</h1>
 
             <div class="text-6xl text-center font-bold text-white">
@@ -15,7 +14,7 @@
 
         <div v-else class="flex gap-4 p-2 min-h-screen">
             <ul class="bg-neutral-900 max-w-100">
-                <li v-for="file in fileList">
+                <li v-for="file in fileTree">
                     <FileTree :file class="p-4 min-w-xs" @file-selected="updateSelectedFilePath"/>
                 </li>
             </ul>
@@ -26,7 +25,7 @@
                     <button :class="{ 'bg-orange-500': !isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = false">File View</button>
                 </div>
 
-                <Canvas v-if="isCanvasView" />
+                <Canvas v-if="isCanvasView" :fileTree />
 
                 <FileContents v-else :filePath="selectedFilePath" />
             </div>
@@ -44,7 +43,7 @@
     const isLoading = ref(false)
     const error = ref(null)
     const repoPath = ref("")
-    const fileList = ref([])
+    const fileTree = ref([])
 
     const isCanvasView = ref(true)
 
@@ -53,13 +52,12 @@
     const readRepoContents = async (path) => {
         isLoading.value = true
         error.value = null
-        fileList.value = []
+        fileTree.value = []
 
         try {
             const tree = await window.api.readDirectoryContents(path)
 
-            fileList.value = tree
-            console.log("Directory tree loaded:", tree)
+            fileTree.value = tree
         } catch(err) {
             error.value = `File access error: ${err.message || err}`
             console.error(error.value, err)
