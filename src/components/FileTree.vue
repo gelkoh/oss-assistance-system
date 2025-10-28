@@ -7,7 +7,8 @@
         </div>
 
         <div v-else @click="$emit('file-selected', file.path)">
-            <File :size="22" class="inline-block" />
+            <i v-if="iconClass.length > 0" :class="iconClass" />
+            <FileQuestionMark v-else :size="20" class="inline-block" />
             {{ file.name }}
         </div>
 
@@ -21,13 +22,27 @@
 
 <script setup>
     import { ref } from "vue"
-    import { Folder, FolderOpen, File } from 'lucide-vue-next'
+    import { Folder, FolderOpen, FileQuestionMark } from 'lucide-vue-next'
+    import { useFileIcons } from "../composables/useFileIcons.js"
+
+    const { getIconClass } = useFileIcons()
 
     const props = defineProps({
         file: Object
     })
 
     const isOpen = ref(false)
+    const iconClass = ref("")
+
+    if (props.file.type === "file") {
+        const fileExtension = props.file.name.split(".").at(-1)
+
+        let iconClassName = getIconClass(fileExtension, true)
+
+        if (iconClassName !== null) {
+            iconClass.value = iconClassName
+        }
+    }
 
     const toggleOpen = () => {
         isOpen.value = !isOpen.value

@@ -5,12 +5,15 @@
 <script setup>
     import * as d3 from "d3"
     import { onMounted, ref, watch } from "vue"
+    import { useFileIcons } from "../composables/useFileIcons.js"
+
+    const { getIconClass } = useFileIcons()
 
     const props = defineProps({
-    fileTree: {
-        type: Object,
-        required: true
-    }
+        fileTree: {
+            type: Object,
+            required: true
+        }
     })
 
     const emit = defineEmits(["open-file"])
@@ -100,6 +103,7 @@
 
         // Background rectangle for directories
         if (node.data.type === "directory" && bounds) {
+            // TODO: Add directory icon
             const paddingX = 16
             const paddingY = 20
 
@@ -118,7 +122,7 @@
 
             group
                 .append("text")
-                .attr("x", bounds.x0 - paddingX + 8)
+                .attr("x", bounds.x0 - paddingX + 10)
                 .attr("y", bounds.y0 - paddingY + 14)
                 .attr("font-size", 12)
                 .attr("font-family", "monospace")
@@ -146,6 +150,16 @@
 
 
         if (node.data.type === "file") {
+            // TODO: Handle unknown file types
+            const fileExtension = node.data.name.split(".").at(-1)
+
+            let iconClassName = getIconClass(fileExtension, false)
+            console.log(iconClassName)
+
+            if (iconClassName === null) {
+                iconClassName = "devicon-devicon-plain"
+            }
+
             // Draw node rectangle
             nodeG
                 .append("rect")
@@ -156,9 +170,25 @@
                 .attr("fill", getColor(colorIndex, 500))
 
             nodeG
+                .append("foreignObject")
+                .attr("width", 20)
+                .attr("height", 20)
+
+                .attr("x", 10)
+                .attr("y", -12)
+
+                .style("pointer-events", "none")
+
+                .append("xhtml:i")
+                .attr("class", iconClassName)
+
+                .style("font-size", "12px")
+                //.style("color", "white");
+
+            nodeG
                 .append("text")
                 .attr("dy", "0.32em")
-                .attr("x", 10)
+                .attr("x", 26)
                 .text(node.data.name)
                 .attr("fill", "white")
         }
