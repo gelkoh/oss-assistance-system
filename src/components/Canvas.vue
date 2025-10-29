@@ -8,6 +8,7 @@
     import * as d3 from "d3"
     import { onMounted, ref, watch } from "vue"
     import { useFileIcons } from "../composables/useFileIcons.js"
+    import hljs from "highlight.js"
 
     const { getIconClass } = useFileIcons()
 
@@ -18,16 +19,16 @@
         }
     })
 
-    const emit = defineEmits(["open-file"])
-
     const container = ref(null)
     const backgroundDots = ref(null)
+
+    const fileContents = ref("")
 
     onMounted(() => {
         renderTree(props.fileTree.children[0])
     })
 
-    let colorIndex = 0
+    let colorIndex = -1
     const colors = ["red",
                     "orange",
                     "amber",
@@ -47,6 +48,7 @@
                     "rose"]
 
     function renderTree(fileTree) {
+        colorIndex = -1
         d3.select(container.value).selectAll("*").remove()
 
         const data = fileTree
@@ -85,17 +87,25 @@
             .attr("fill", "url(#dot-grid)")
             .style("pointer-events", "none")
 
-        const g = svg.append("g").attr("transform", "translate(100, 50)")
+        const g = svg.append("g").attr("transform", "translate(-500, 600)")
 
         const root = d3.hierarchy(data)
-        const treeLayout = d3.tree().nodeSize([40, 160])
+        const treeLayout = d3.tree().nodeSize([40, 900])
+        sortNodesByType(root)
         treeLayout(root)
-
+        applyDynamicOffsets(root)
         drawNode(root, g)
     }
 
     function drawNode(node, parentGroup) {
         const group = parentGroup.append("g").attr("class", "dir-group")
+
+        if (node.data.type === "directory") {
+            colorIndex++
+        }
+
+        node.darkColor = getColor(colorIndex, 950)
+        node.brightColor = getColor(colorIndex, 600)
 
         // Draw children first (recursively)
         if (node.children) {
@@ -140,11 +150,9 @@
                     .attr("width", bounds.x1 - bounds.x0 + 40)
                     .attr("height", bounds.y1 - bounds.y0 + 60)
                     .attr("rx", 8)
-                    .style("fill", getColor(colorIndex, 950))
+                    .style("fill", node.darkColor)
                     .attr("opacity", 0.5)
-                    .style("stroke", getColor(colorIndex, 500))
-
-            colorIndex++
+                    .style("stroke", node.brightColor)
 
             group
                 .append("text")
@@ -166,21 +174,28 @@
             .attr("class", "node")
             .style("cursor", "pointer")
             .on("click", (event) => {
-            event.stopPropagation()
-                if (node.data.type === "directory") {
-                    // TODO: Expand/collapse behavior here
-                } else {
-                    emit("open-file", node.data.path)
-                }
-            })
+                event.stopPropagation()
+                    if (node.data.type === "directory") {
+                        // TODO: Expand/collapse behavior here
+                    } else {
+                        node.data.showContent = !node.data.showContent
 
+                        if (node.data.showContent) {
+                            getFileContents(node.data.path).then(() => {
+                                node.data.code = fileContents.value
+                                renderTree(props.fileTree.children[0])
+                            })
+                        } else {
+                            renderTree(props.fileTree.children[0])
+                        }
+                    }
+                })
 
         if (node.data.type === "file") {
             // TODO: Handle unknown file types
             const fileExtension = node.data.name.split(".").at(-1)
 
             let iconClassName = getIconClass(fileExtension, false)
-            console.log(iconClassName)
 
             if (iconClassName === null) {
                 iconClassName = "devicon-devicon-plain"
@@ -189,12 +204,13 @@
             // Draw node rectangle
             nodeG
                 .append("rect")
-                .attr("width", 736)
+                .attr("width", 800)
                 .attr("height", 24)
                 .attr("y", -12)
                 .attr("rx", 4)
-                .attr("fill", getColor(colorIndex, 500))
+                .attr("fill", node.brightColor)
 
+            // Draw icon
             nodeG
                 .append("foreignObject")
                 .attr("width", 20)
@@ -209,23 +225,30 @@
                 .attr("class", iconClassName)
 
                 .style("font-size", "12px")
-                //.style("color", "white");
 
+            // Draw file name
             nodeG
                 .append("text")
                 .attr("dy", "0.32em")
                 .attr("x", 26)
                 .text(node.data.name)
                 .attr("fill", "white")
-        }
 
-        function toggleChildren(d) {
-            if (d.children) {
-                d._children = d.children
-                d.children = null
-            } else {
-                d.children = d._children
-                d._children = null
+            // Draw file contents
+            if (node.data.showContent && node.data.code) {
+                const result = hljs.highlightAuto(node.data.code)
+                const colorString = "1px solid " + node.colorBright
+
+                nodeG
+                    .append("foreignObject")
+                    .attr("width", 800)
+                    .attr("height", 400)
+                    .attr("y", 11)
+                    .html(`
+                        <div xmlns="http://www.w3.org/1999/xhtml">
+                            <pre><code class="hljs whitespace-pre-wrap rounded-b-md overflow-y-auto h-[400px]" style="background: ${node.darkColor} !important; border: 1px solid ${node.brightColor}">${result.value}</code></pre>
+                        </div>
+                    `)
             }
         }
     }
@@ -233,6 +256,50 @@
     function getColor(colorIndex, lightness) {
         const index = colorIndex % (colors.length - 1)
         return `var(--color-${colors[index]}-${lightness})`
+    }
+
+    async function getFileContents(path) {
+        try {
+            const fileContentsString = await window.api.readFileContents(path)
+            fileContents.value = fileContentsString
+            console.log("File contents loaded successfully")
+        } catch(err) {
+            fileContents.value = ""
+            throw new Error(`Could not read file: ${err.message}`)
+        }
+    }
+
+    function sortNodesByType(root) {
+        root.each(node => {
+            if (node.children) {
+                node.children.sort((a, b) => {
+                    if (a.data.type === b.data.type) return a.data.name.localeCompare(b.data.name)
+                    return a.data.type === "file" ? -1 : 1
+                })
+            }
+        })
+    }
+
+    function getNodeExtraHeight(node) {
+        if (node.data.type === "file" && node.data.showContent)  {
+            return 400
+        }
+
+        return 0
+    }
+
+    function applyDynamicOffsets(root) {
+        let cumulativeOffset = 0
+
+        root.eachBefore((node) => {
+            node.x += cumulativeOffset
+
+            const extra = getNodeExtraHeight(node)
+
+            if (extra > 0) {
+                cumulativeOffset += extra
+            }
+        })
     }
 </script>
 
