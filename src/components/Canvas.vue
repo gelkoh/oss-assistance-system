@@ -24,7 +24,11 @@
 
     const fileContents = ref("")
 
-    onMounted(() => {
+    onMounted(async () => {
+        const rootData = d3.hierarchy(props.fileTree.children[0])
+
+        await loadAllFileContents(rootData)
+
         renderTree(props.fileTree.children[0])
     })
 
@@ -173,23 +177,17 @@
             .attr("transform", `translate(${x},${y})`)
             .attr("class", "node")
             .style("cursor", "pointer")
-            .on("click", (event) => {
+            .on("click", async (event) => {
                 event.stopPropagation()
-                    if (node.data.type === "directory") {
-                        // TODO: Expand/collapse behavior here
-                    } else {
-                        node.data.showContent = !node.data.showContent
 
-                        if (node.data.showContent) {
-                            getFileContents(node.data.path).then(() => {
-                                node.data.code = fileContents.value
-                                renderTree(props.fileTree.children[0])
-                            })
-                        } else {
-                            renderTree(props.fileTree.children[0])
-                        }
-                    }
-                })
+                if (node.data.type === "directory") {
+                     // TODO: Expand/collapse behavior here
+                } else {
+                    node.data.showContent = !node.data.showContent
+
+                    renderTree(props.fileTree.children[0])
+                }
+            })
 
         if (node.data.type === "file") {
             // TODO: Handle unknown file types
@@ -204,7 +202,7 @@
             // Draw node rectangle
             nodeG
                 .append("rect")
-                .attr("width", 800)
+                .attr("width", 808)
                 .attr("height", 24)
                 .attr("y", -12)
                 .attr("rx", 4)
@@ -235,20 +233,28 @@
                 .attr("fill", "white")
 
             // Draw file contents
-            if (node.data.showContent && node.data.code) {
-                const result = hljs.highlightAuto(node.data.code)
-                const colorString = "1px solid " + node.colorBright
+            const result = hljs.highlightAuto(node.data.code)
+            const colorString = "1px solid " + node.colorBright
 
-                nodeG
-                    .append("foreignObject")
-                    .attr("width", 800)
-                    .attr("height", 400)
-                    .attr("y", 11)
-                    .html(`
-                        <div xmlns="http://www.w3.org/1999/xhtml">
-                            <pre><code class="hljs whitespace-pre-wrap rounded-b-md overflow-y-auto h-[400px]" style="background: ${node.darkColor} !important; border: 1px solid ${node.brightColor}">${result.value}</code></pre>
-                        </div>
-                    `)
+            const content = nodeG
+                .append("foreignObject")
+                .attr("width", 808)
+                .attr("y", 11)
+                .html(`
+                    <div xmlns="http://www.w3.org/1999/xhtml">
+                        <pre><code class="hljs whitespace-pre-wrap rounded-b-md" style="background: ${node.darkColor} !important; border: 1px solid ${node.brightColor}">${result.value}</code></pre>
+                    </div>
+                `)
+
+            const div = content.select("div").node()
+            const rect = div.getBoundingClientRect()
+
+            if (rect.height > 0) {
+                node.data.renderedHeight = rect.height
+            }
+
+            if (node.data.showContent) {
+                content.attr("height", node.data.renderedHeight)
             }
         }
     }
@@ -261,10 +267,10 @@
     async function getFileContents(path) {
         try {
             const fileContentsString = await window.api.readFileContents(path)
-            fileContents.value = fileContentsString
+            return fileContentsString
             console.log("File contents loaded successfully")
         } catch(err) {
-            fileContents.value = ""
+            console.error("Error reading file content:", err)
             throw new Error(`Could not read file: ${err.message}`)
         }
     }
@@ -281,8 +287,8 @@
     }
 
     function getNodeExtraHeight(node) {
-        if (node.data.type === "file" && node.data.showContent)  {
-            return 400
+        if (node.data.type === "file" && node.data.showContent) {
+            return node.data.renderedHeight ?? 0
         }
 
         return 0
@@ -300,6 +306,30 @@
                 cumulativeOffset += extra
             }
         })
+    }
+
+    async function loadAllFileContents(root) {
+        const filePromises = []
+
+        root.each(node => {
+            if (node.data.type === "file") {
+                const promise = getFileContents(node.data.path)
+                    .then(content => {
+                        node.data.code = content
+                        console.log(node.data.code)
+                        console.log("File contents loaded")
+                    })
+                    .catch(err => {
+                        console.warn(`Skipping file ${node.data.name} due to error: ${err.message}`)
+                        node.data.code = `ERROR: ${err.message}` 
+                    })
+
+                filePromises.push(promise)
+            }
+        })
+
+        await Promise.allSettled(filePromises)
+        console.log("All file contents loaded or attempted.")
     }
 </script>
 
