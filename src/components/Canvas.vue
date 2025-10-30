@@ -2,12 +2,15 @@
     <div ref="container" class="absolute top-0 left-0 w-full h-full -z-10">
         <div ref="backgroundDots" />
     </div>
+
+    <ZoomControls :zoomPercentage @zoomOut="handleZoomOut" @zoomIn="handleZoomIn" />
 </template>
 
 <script setup>
     import * as d3 from "d3"
     import { onMounted, ref, watch } from "vue"
     import { useFileIcons } from "../composables/useFileIcons.js"
+    import ZoomControls from "../components/ZoomControls.vue"
     import hljs from "highlight.js"
 
     const { getIconClass } = useFileIcons()
@@ -23,6 +26,10 @@
     const backgroundDots = ref(null)
 
     const fileContents = ref("")
+
+    let zoomBehavior
+    const zoomPercentage = ref(100)
+    let currentZoom = 1
 
     onMounted(async () => {
         const rootData = d3.hierarchy(props.fileTree.children[0])
@@ -66,9 +73,15 @@
             .attr("height", "100%")
             .attr("preserveAspectRatio", "xMinYMin meet")
             .classed("svg-content-responsive", true)
-            .call(
-                d3.zoom().scaleExtent([0.2, 2]).on("zoom", (event) => g.attr("transform", event.transform))
-            )
+
+        zoomBehavior = d3.zoom().scaleExtent([0.25, 2]).on("zoom", (event) => {
+            g.attr("transform", event.transform)
+            currentZoom = event.transform.k
+            zoomPercentage.value = Math.floor(event.transform.k * 100)
+            console.log("Zoom factor: " + zoomPercentage.value)
+        })
+
+        svg.call(zoomBehavior)
 
         // Background dots
         const defs = svg.append("defs")
@@ -316,7 +329,6 @@
                 const promise = getFileContents(node.data.path)
                     .then(content => {
                         node.data.code = content
-                        console.log(node.data.code)
                         console.log("File contents loaded")
                     })
                     .catch(err => {
@@ -330,6 +342,33 @@
 
         await Promise.allSettled(filePromises)
         console.log("All file contents loaded or attempted.")
+    }
+
+    function handleZoomOut(amount) {
+        console.log("Handling zooming out")
+        const svg = d3.select(container.value).select("svg")
+
+        let newZoom = currentZoom - amount
+        const multiple = Math.ceil(newZoom / amount)
+
+        newZoom = amount * multiple
+
+        svg.call(zoomBehavior.scaleTo, newZoom)
+
+        currentZoom = newZoom
+    }
+
+    function handleZoomIn(amount) {
+        console.log("Handling zooming in")
+        const svg = d3.select(container.value).select("svg")
+
+        let newZoom = currentZoom + amount
+        const multiple = Math.floor(newZoom / amount)
+        newZoom = amount * multiple
+
+        svg.call(zoomBehavior.scaleTo, newZoom)
+
+        currentZoom = newZoom
     }
 </script>
 
