@@ -7,5 +7,5 @@ contextBridge.exposeInMainWorld("api", {
     readDirectoryContents: (repoPath) => ipcRenderer.invoke("read-directory-tree", repoPath),
     readFileContents: (filePath) => ipcRenderer.invoke("read-file-contents", filePath),
     openPath: (filePath) => ipcRenderer.invoke("open-path", filePath),
-    getRecentlyUsedRepositories: () => ipcRenderer.invoke("get-recently-used-repositories")
+    getRecentlyUsedRepositories: () => ipcRenderer.invoke("get-recently-used-repositories"),
 })

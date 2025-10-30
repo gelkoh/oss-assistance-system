@@ -1,5 +1,5 @@
 <template>
-    <div v-if="file.type === 'directory'" class="relative pl-6 pt-1 pr-4 before:absolute before:left-2 before:top-[16px] before:w-3 before:h-px before:bg-neutral-500">
+    <div v-if="file.type === 'directory'" class="relative pl-6 pt-1 before:absolute before:left-2 before:top-[16px] before:w-3 before:h-px before:bg-neutral-500">
         <div @click="toggleOpen">
             <Folder v-if="!isOpen" :size="18" class="inline-block" />
             <FolderOpen v-else :size="18" class="inline-block" />
@@ -14,10 +14,14 @@
     </div>
 
     <div v-else class="relative pl-6 pt-1 pr-4 before:absolute before:left-2 before:top-[50%] before:w-3 before:h-px before:bg-neutral-500">
-        <div @click="$emit('file-selected', file.path)" >
-            <i v-if="iconClass.length > 0" :class="iconClass" />
-            <FileQuestionMark v-else :size="20" class="inline-block" />
-            {{ file.name }}
+        <div @click="$emit('file-selected', file.path)" class="flex justify-between items-center">
+            <div>
+                <i v-if="iconClass.length > 0" :class="iconClass" />
+                <FileQuestionMark v-else :size="20" class="inline-block" />
+                {{ file.name }}
+            </div>
+
+            <SquarePen :size="16" class="inline-block" @click="openFileInEditor(file.path)" />
         </div>
 
         <ul v-if="isOpen">
@@ -30,7 +34,7 @@
 
 <script setup>
     import { ref } from "vue"
-    import { Folder, FolderOpen, FileQuestionMark } from 'lucide-vue-next'
+    import { Folder, FolderOpen, FileQuestionMark, SquarePen } from 'lucide-vue-next'
     import { useFileIcons } from "../composables/useFileIcons.js"
 
     const { getIconClass } = useFileIcons()
@@ -54,5 +58,11 @@
 
     const toggleOpen = () => {
         isOpen.value = !isOpen.value
+    }
+
+    const openFileInEditor = (path) => {
+        window.api.openPath(path)
+        console.log(`Trying to open the file with path: ${path} in the default text editor`)
+        console.log(typeof path)
     }
 </script>

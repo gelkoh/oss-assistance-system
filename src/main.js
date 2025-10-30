@@ -128,6 +128,18 @@ function createWindow() {
             throw new Error("Could not get the recently used repositories")
         }
     })
+
+    ipcMain.handle("open-path", (event, filePath) => {
+        try {
+            console.log("File to be opened: " + filePath)
+            console.log(filePath)
+            console.log(typeof filePath)
+            shell.openPath(filePath)
+        }  catch(err) {
+            console.error("An error occurred opening the file in the default file editor: ", err.message)
+            throw new Error("Error opening the file in the default file editor")
+        }
+    })
 }
 
 app.whenReady().then(() => {
