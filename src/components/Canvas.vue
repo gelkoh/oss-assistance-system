@@ -3,6 +3,7 @@
         <div ref="backgroundDots" />
     </div>
 
+    <CanvasControls @expand-all="handleExpandAll" @collapse-all="handleCollapseAll" />
     <ZoomControls :zoomPercentage @zoomOut="handleZoomOut" @zoomIn="handleZoomIn" />
 </template>
 
@@ -10,6 +11,7 @@
     import * as d3 from "d3"
     import { onMounted, ref, watch } from "vue"
     import { useFileIcons } from "../composables/useFileIcons.js"
+    import CanvasControls from "../components/CanvasControls.vue"
     import ZoomControls from "../components/ZoomControls.vue"
     import hljs from "highlight.js"
 
@@ -30,6 +32,9 @@
     let zoomBehavior
     const zoomPercentage = ref(100)
     let currentZoom = 1
+    
+    let collapseAll = false
+    let expandAll = false
 
     onMounted(async () => {
         const rootData = d3.hierarchy(props.fileTree.children[0])
@@ -112,9 +117,17 @@
         treeLayout(root)
         applyDynamicOffsets(root)
         drawNode(root, g)
+        collapseAll = false
+        expandAll = false
     }
 
     function drawNode(node, parentGroup) {
+        if (collapseAll) {
+            node.data.showContent = false
+        } else if (expandAll) {
+            node.data.showContent = true
+        }
+
         const group = parentGroup.append("g").attr("class", "dir-group")
 
         if (node.data.type === "directory") {
@@ -369,6 +382,20 @@
         svg.call(zoomBehavior.scaleTo, newZoom)
 
         currentZoom = newZoom
+    }
+
+    function handleCollapseAll() {
+        console.log("Handling collapse all")
+        collapseAll = true
+        renderTree(props.fileTree.children[0])
+        renderTree(props.fileTree.children[0])
+    }
+
+    function handleExpandAll() {
+        console.log("Handling expand all")
+        expandAll = true
+        renderTree(props.fileTree.children[0])
+        renderTree(props.fileTree.children[0])
     }
 </script>
 
