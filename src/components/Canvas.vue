@@ -3,6 +3,8 @@
         <div ref="backgroundDots" />
     </div>
 
+    <ChatbotButton @chatbot-button-clicked="handleChatbotButtonClicked" />
+    <Chatbot v-if="chatbotVisible" />
     <CanvasControls @expand-all="handleExpandAll" @collapse-all="handleCollapseAll" />
     <ZoomControls :zoomPercentage @zoomOut="handleZoomOut" @zoomIn="handleZoomIn" />
 </template>
@@ -13,6 +15,8 @@
     import { useFileIcons } from "../composables/useFileIcons.js"
     import CanvasControls from "../components/CanvasControls.vue"
     import ZoomControls from "../components/ZoomControls.vue"
+    import ChatbotButton from "../components/ChatbotButton.vue"
+    import Chatbot from "../components/Chatbot.vue"
     import hljs from "highlight.js"
 
     const { getIconClass } = useFileIcons()
@@ -35,6 +39,8 @@
     
     let collapseAll = false
     let expandAll = false
+
+    const chatbotVisible = ref(false)
 
     onMounted(async () => {
         const rootData = d3.hierarchy(props.fileTree.children[0])
@@ -416,6 +422,10 @@
         expandAll = true
         renderTree(props.fileTree.children[0])
         renderTree(props.fileTree.children[0])
+    }
+
+    function handleChatbotButtonClicked() {
+        chatbotVisible.value = !chatbotVisible.value
     }
 </script>
 
