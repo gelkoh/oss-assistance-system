@@ -1,5 +1,4 @@
 <template>
-<!--//////////////////////////////////////////////////////////////////////////-->
     <div>
         <div v-if="fileTree === undefined || Object.keys(fileTree).length === 0" class="flex justify-center items-center flex-col">
             <h1 class="text-2xl text-white">Open source assistance system</h1>
@@ -11,6 +10,8 @@
             </div>
 
             <button @click="openRepo" :disabled="isLoading" class="mt-8 bg-orange-500 px-4 py-2 rounded-sm">Open Repository</button>
+
+            <RecentlyUsedRepositories @open-recent-repository="handleOpenRecentRepository" />
         </div>
 
         <div v-else>
@@ -40,6 +41,7 @@
     import FileTree from "./components/FileTree.vue"
     import FileContents from "./components/FileContents.vue"
     import Canvas from "./components/Canvas.vue"
+    import RecentlyUsedRepositories from "./components/RecentlyUsedRepositories.vue"
 
     const isLoading = ref(false)
     const error = ref(null)
@@ -57,9 +59,6 @@
 
         try {
             const tree = await window.api.readDirectoryContents(path)
-            console.log("TREE: ")
-            console.log(tree)
-            console.log(typeof tree)
 
             fileTree.value = tree
         } catch(err) {
@@ -99,5 +98,11 @@
         isLoading.value = true
         error.value = null
         window.api.openDirectoryDialog()
+    }
+
+    const handleOpenRecentRepository = (path) => {
+        console.log(`Open recent directory under path: ${path}`)
+        repoPath.value = path
+        readRepoContents(repoPath.value)
     }
 </script>

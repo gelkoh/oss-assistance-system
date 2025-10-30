@@ -3,6 +3,7 @@ import path from "path"
 import fs from "fs"
 import { readFile } from "fs/promises"
 import { fileURLToPath } from "url"
+import settings from "electron-settings"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -78,6 +79,17 @@ function createWindow() {
 
         if (!result.canceled && result.filePaths.length > 0) {
             event.sender.send("selected-directory", result.filePaths[0])
+
+            let recentlyUsedRepositoriesPaths = await settings.get("recentlyUsedRepositoriesPaths")
+            console.log("recentlyUsedRepositoriesPaths: " + recentlyUsedRepositoriesPaths)
+
+            if (recentlyUsedRepositoriesPaths === undefined) {
+                recentlyUsedRepositoriesPaths = [result.filePaths[0]]
+            } else if (!recentlyUsedRepositoriesPaths.includes(result.filePaths[0])) {
+                recentlyUsedRepositoriesPaths.push(result.filePaths[0])
+            }
+
+            await settings.set("recentlyUsedRepositoriesPaths", recentlyUsedRepositoriesPaths)
         } else {
             event.sender.send("directory-selection-canceled")
         }
@@ -104,6 +116,16 @@ function createWindow() {
         } catch(err) {
             console.error(`An error occurred reading the file contents for ${filePath}:`, err)
             throw new Error(`Could not read file: ${err.message}`)
+        }
+    })
+
+    ipcMain.handle("get-recently-used-repositories", async () => {
+        try {
+            const recentlyUsedRepositoriesPaths = await settings.get("recentlyUsedRepositoriesPaths")
+            return recentlyUsedRepositoriesPaths
+        } catch(err) {
+            console.error("An error occurred getting the recently used repositories", err)
+            throw new Error("Could not get the recently used repositories")
         }
     })
 }
