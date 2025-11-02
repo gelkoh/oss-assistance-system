@@ -30,6 +30,7 @@
                 <Canvas v-if="isCanvasView" :fileTree />
 
                 <FileContents v-else :filePath="selectedFilePath" />
+                <Issues :issues :ownerName :repoName @load-repo-issues="loadRepoIssues" />
             </div>
         </div>
     </div>
@@ -42,6 +43,7 @@
     import FileContents from "./components/FileContents.vue"
     import Canvas from "./components/Canvas.vue"
     import RecentlyUsedRepositories from "./components/RecentlyUsedRepositories.vue"
+    import Issues from "./components/Issues.vue"
 
     const isLoading = ref(false)
     const error = ref(null)
@@ -52,15 +54,42 @@
 
     const selectedFilePath = ref("")
 
+    const issues = ref([])
+
+    const ownerName = ref(null)
+    const repoName = ref(null)
+
     const readRepoContents = async (path) => {
         isLoading.value = true
         error.value = null
         fileTree.value = {}
 
+        ownerName.value = null
+        repoName.value = null
+
         try {
-            const tree = await window.api.readDirectoryContents(path)
+            const { fileTree: tree, repoInfo } = await window.api.readDirectoryContents(path)
 
             fileTree.value = tree
+
+            console.log("Repo info", repoInfo)
+
+            if (repoInfo && repoInfo.ownerName && repoInfo.repoName) {
+                console.log("Inside readRepoContents: repoInfo.ownerName: " + repoInfo.ownerName + ", repoInfo.repoName: " + repoInfo.repoName)
+                ownerName.value = repoInfo.ownerName
+                repoName.value = repoInfo.repoName
+
+                const cachedIssues = await window.api.loadIssuesCache(path)
+                console.log("Cached issues:", cachedIssues)
+                issues.value = cachedIssues
+                console.log(`Loaded ${cachedIssues.length} issues from cache`)
+
+                if (cachedIssues.length === 0) {
+                    await fetchAndCacheIssues(repoInfo.ownerName, repoInfo.repoName, path)
+                }
+            } else {
+                issues.value = []
+            }
         } catch(err) {
             error.value = `File access error: ${err.message || err}`
             console.error(error.value, err)
@@ -104,5 +133,28 @@
         console.log(`Open recent directory under path: ${path}`)
         repoPath.value = path
         readRepoContents(repoPath.value)
+    }
+
+    const fetchAndCacheIssues = async (owner, repo, repoPath) => {
+        console.log("Fetching fresh issues from GitHub...")
+
+        try {
+            const freshIssues = await window.api.fetchRepoIssues(owner, repo)
+            issues.value = freshIssues
+
+            await window.api.saveIssuesCache(repoPath, freshIssues)
+
+            console.log(`Successfully fetched and cached ${freshIssues.length} fresh open issues`)
+        } catch(err) {
+            console.error("Error fetching fresh issues:", err.message)
+        }
+    }
+
+    const loadRepoIssues = async () => {
+        if (ownerName.value && repoName.value) {
+            await fetchAndCacheIssues(ownerName.value, repoName.value, repoPath.value)
+        } else {
+            console.warn("Cannot refresh issues: No GitHub repository detected")
+        }
     }
 </script>

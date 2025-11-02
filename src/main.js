@@ -4,9 +4,24 @@ import fs from "fs"
 import { readFile } from "fs/promises"
 import { fileURLToPath } from "url"
 import settings from "electron-settings"
+import { Octokit } from "@octokit/core"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+let currentRepoInfo = { ownerName: null, repoName: null }
+
+const octokit = new Octokit({})
+
+const readFileContents = async (filePath) => {
+    try {
+        const data = await readFile(filePath, "utf-8")
+        return data
+    } catch(err) {
+        console.error(`An error occurred reading the file contents for ${filePath}:`, err)
+        throw new Error(`Could not read file: ${err.message}`)
+    }
+}
 
 function buildTree(dirPath) {
     const stats = fs.statSync(dirPath)
@@ -16,6 +31,58 @@ function buildTree(dirPath) {
 
     files = files.filter(entry => {
         if (entry.isDirectory() && entry.name === "node_modules") {
+            return false
+        }
+
+        if (entry.isDirectory() && entry.name === ".git") {
+            const gitDirPath = path.join(dirPath, entry.name)
+
+            try {
+                const gitFiles = fs.readdirSync(gitDirPath, { withFileTypes: true })
+                console.log("This is a git repository")
+
+                for (const gitFile of gitFiles) {
+                    if (gitFile.name === "config" && gitFile.isFile()) {
+                        const configPath = path.join(gitDirPath, gitFile.name)
+
+                        const fileContents = fs.readFileSync(configPath, "utf-8")
+
+                        console.log("Git config file found")
+
+                        const gitConfigLines = fileContents.split("\n")
+
+                        let ownerName
+                        let repoName
+
+                        for (const line of gitConfigLines) {
+                            if (line.includes("github.com")) {
+                                if (line.includes("https://github.com/")) {
+                                    ownerName = line.split("/").at(-2)
+                                } else if (line.includes("git@github.com:")) {
+                                    ownerName = line.split(":").at(1).split("/")[0]
+                                }
+
+                                repoName = line.split("/").at(-1)
+
+                                if (ownerName && repoName) {
+                                    currentRepoInfo.ownerName = ownerName
+                                    currentRepoInfo.repoName = repoName.replace(/\.git$/,"")
+
+                                    console.log("ownerName:", currentRepoInfo.ownerName)
+                                    console.log("repoName:", currentRepoInfo.repoName)
+                                }
+
+                                break
+                            }
+                        }
+
+                        break
+                    }
+                }
+            } catch(err) {
+                console.error("Error reading the .git repository:", err)
+            }
+
             return false
         }
 
@@ -98,11 +165,17 @@ function createWindow() {
     ipcMain.handle("read-directory-tree", (event, repoPath) => {
         console.log("Building tree directory for: ", repoPath)
 
+        currentRepoInfo = { ownerName: null, repoName: null }
+
         try {
             const treeRoot = buildRepoTreeWrapper(repoPath)
             console.log("Tree root:")
             console.log(treeRoot)
-            return treeRoot
+
+            return {
+                fileTree: treeRoot,
+                repoInfo: currentRepoInfo
+            }
         } catch(err) {
             console.error("Error building directory tree: " + err)
             throw new Error(err.message)
@@ -138,6 +211,54 @@ function createWindow() {
         }  catch(err) {
             console.error("An error occurred opening the file in the default file editor: ", err.message)
             throw new Error("Error opening the file in the default file editor")
+        }
+    })
+
+    ipcMain.handle("fetch-repo-issues", async (event, { owner, repo }) => {
+        try {
+            const response = await octokit.request("GET /repos/{owner}/{repo}/issues", {
+                owner: owner,
+                repo: repo,
+                state: "open",
+                headers: {
+                    "X-GitHub-Api-Version": "2022-11-28"
+                }
+            })
+
+            const issues = response.data.filter(item => !item.pull_request)
+
+            return issues
+        } catch(err) {
+            console.error("GitHub API Error:", err)
+            throw new Error(`Failed to fetch issues: ${err.message}`)
+        }
+    })
+
+    ipcMain.handle("save-issues-cache", async (event, { repoPath, issues }) => {
+        try {
+            await settings.set(`issues-cache.${repoPath}`, issues)
+            console.log(`Successfully cached issues for: ${repoPath}`)
+            return true
+        } catch(err) {
+            console.error("Error saving issues cache:", err)
+            throw new Error("Could not save issues cache")
+        }
+    })
+
+    ipcMain.handle("load-issues-cache", async (event, repoPath) => {
+        try {
+            const issues = await settings.get(`issues-cache.${repoPath}`)
+
+            if (issues === undefined) {
+                return []
+            }
+
+            console.log("Loaded issues from issue cache:", issues)
+
+            return issues
+        } catch(err) {
+            console.error("Error loading cached issues:", err)
+            return []
         }
     })
 }
