@@ -85,14 +85,16 @@
             .attr("preserveAspectRatio", "xMinYMin meet")
             .classed("svg-content-responsive", true)
 
-        zoomBehavior = d3.zoom().scaleExtent([0.25, 2]).on("zoom", (event) => {
-            g.attr("transform", event.transform)
-            currentZoom = event.transform.k
-            zoomPercentage.value = Math.floor(event.transform.k * 100)
-            console.log("Zoom factor: " + zoomPercentage.value)
-        })
+        zoomBehavior = d3.zoom()
+            .scaleExtent([0.25, 2])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform)
+                currentZoom = event.transform.k
+                zoomPercentage.value = Math.floor(event.transform.k * 100)
+            })
 
         svg.call(zoomBehavior)
+        svg.on("dblclick.zoom", null)
 
         // Background dots
         const defs = svg.append("defs")
