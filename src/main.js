@@ -67,9 +67,6 @@ function buildTree(dirPath) {
                                 if (ownerName && repoName) {
                                     currentRepoInfo.ownerName = ownerName
                                     currentRepoInfo.repoName = repoName.replace(/\.git$/,"")
-
-                                    console.log("ownerName:", currentRepoInfo.ownerName)
-                                    console.log("repoName:", currentRepoInfo.repoName)
                                 }
 
                                 break
@@ -253,7 +250,7 @@ function createWindow() {
                 return []
             }
 
-            console.log("Loaded issues from issue cache:", issues)
+            console.log("Successfully loaded issues from cache")
 
             return issues
         } catch(err) {
