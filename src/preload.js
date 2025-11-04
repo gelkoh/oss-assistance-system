@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld("api", {
     readFileContents: (filePath) => ipcRenderer.invoke("read-file-contents", filePath),
     openPath: (filePath) => ipcRenderer.invoke("open-path", filePath),
     getRecentlyUsedRepositories: () => ipcRenderer.invoke("get-recently-used-repositories"),
+    removeRecentlyUsedRepository: (repoPath) => ipcRenderer.invoke("remove-recently-used-repository", repoPath),
     fetchRepoIssues: (owner, repo) => ipcRenderer.invoke("fetch-repo-issues", { owner, repo }),
     saveIssuesCache: (repoPath, issues) => ipcRenderer.invoke("save-issues-cache", { repoPath, issues }),
     loadIssuesCache: (repoPath) => ipcRenderer.invoke("load-issues-cache", repoPath)

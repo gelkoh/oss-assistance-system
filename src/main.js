@@ -199,6 +199,25 @@ function createWindow() {
         }
     })
 
+    ipcMain.handle("remove-recently-used-repository", async (event, repoPath) => {
+        try {
+            let recentlyUsedRepositoriesPaths = await settings.get("recentlyUsedRepositoriesPaths")
+
+            recentlyUsedRepositoriesPaths = recentlyUsedRepositoriesPaths.filter(path => {
+                if (path === repoPath) {
+                    return false
+                }
+
+                return true
+            })
+
+            await settings.set("recentlyUsedRepositoriesPaths", recentlyUsedRepositoriesPaths)
+            await settings.unset(`issues-cache.${repoPath}`)
+        } catch(err) {
+            console.error(`An error occurred removing the repository under: ${repoPath} from the recently used repositories`)
+        }
+    })
+
     ipcMain.handle("open-path", (event, filePath) => {
         try {
             console.log("File to be opened: " + filePath)

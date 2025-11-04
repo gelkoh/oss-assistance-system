@@ -1,12 +1,21 @@
 <template>
-    <div>
-        Recently used repositories
+    <div class="max-w-xl w-full">
+        <div class="text-2xl font-bold">Recently used</div>
 
-        <ul>
-            <li v-for="path in paths" :key="path">
-                <button @click="$emit('open-recent-repository', path)" class="bg-neutral-800 px-4 py-3 mt-2 rounded-sm w-full hover:bg-neutral-700">
-                    {{ path }}
-                </button>
+        <ul class="mt-2">
+            <li v-for="path in paths" :key="path" class="py-3 w-full border-b border-neutral-500">
+
+                <div class="flex gap-x-1 justify-between items-center">
+                    <button @click="$emit('open-recent-repository', path)" class="text-large font-bold cursor-pointer">
+                        {{ path.split("/").at(-1) }}
+                    </button>
+
+                    <button @click="removeRepository(path)" class="w-8 h-8 hover:bg-neutral-800 flex items-center justify-center rounded-full cursor-pointer">
+                        <X :size="18" />
+                    </button>
+                </div>
+
+                <div class="text-neutral-400">{{ path }}</div>
             </li>
         </ul>
     </div>
@@ -14,6 +23,7 @@
 
 <script setup>
     import { ref, onMounted } from "vue"
+    import { X } from "lucide-vue-next"
 
     const paths = ref([])
 
@@ -24,6 +34,14 @@
         } catch(err) {
             console.log(`Error getting recently used repositories ${err}`)
         }
+    }
+
+    const removeRepository = async (path) => {
+        await window.api.removeRecentlyUsedRepository(path)
+
+        getRecentlyUsedRepositories().then((recentlyUsedRepositoriesPaths) => {
+            paths.value = recentlyUsedRepositoriesPaths
+        })
     }
 
     onMounted(async () => {
