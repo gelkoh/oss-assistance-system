@@ -4,7 +4,7 @@
     </div>
 
     <CanvasControls @expand-all="handleExpandAll" @collapse-all="handleCollapseAll" />
-    <ZoomControls :zoomPercentage @zoomOut="handleZoomOut" @zoomIn="handleZoomIn" />
+    <ZoomControls :zoomPercentage @zoom-out="handleZoomOut" @zoom-in="handleZoomIn" />
 </template>
 
 <script setup>
@@ -35,6 +35,9 @@
 
     let collapseAll = false
     let expandAll = false
+
+    const MIN_SCALE = 0.25
+    const MAX_SCALE = 2
 
     onMounted(async () => {
         const rootData = d3.hierarchy(props.fileTree.children[0])
@@ -80,7 +83,7 @@
             .classed("svg-content-responsive", true)
 
         zoomBehavior = d3.zoom()
-            .scaleExtent([0.25, 2])
+            .scaleExtent([MIN_SCALE, MAX_SCALE])
             .on("zoom", (event) => {
                 g.attr("transform", event.transform)
                 currentZoom = event.transform.k
@@ -380,7 +383,6 @@
     }
 
     function handleZoomOut(amount) {
-        console.log("Handling zooming out")
         const svg = d3.select(container.value).select("svg")
 
         let newZoom = currentZoom - amount
@@ -388,18 +390,21 @@
 
         newZoom = amount * multiple
 
+        if (newZoom < MIN_SCALE) newZoom = MIN_SCALE
+
         svg.call(zoomBehavior.scaleTo, newZoom)
 
         currentZoom = newZoom
     }
 
     function handleZoomIn(amount) {
-        console.log("Handling zooming in")
         const svg = d3.select(container.value).select("svg")
 
         let newZoom = currentZoom + amount
         const multiple = Math.floor(newZoom / amount)
         newZoom = amount * multiple
+
+        if (newZoom > MAX_SCALE) newZoom = MAX_SCALE
 
         svg.call(zoomBehavior.scaleTo, newZoom)
 
