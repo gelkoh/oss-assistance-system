@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="issuesVisible" class="w-120 h-240 bg-neutral-800 absolute top-6 right-24 rounded-md border border-neutral-500 p-4">
+        <div class="w-120 h-240 bg-neutral-800 absolute top-6 left-24 rounded-md border border-neutral-500 p-4">
             <div v-if="issuesListVisible">
                 <div class="text-xl">
                     Issues
@@ -24,10 +24,6 @@
                 <IssueDetails :selectedIssue :parsedIssueBody @go-back-to-issues-list="handleGoBackToIssuesList" />
             </div>
         </div>
-
-        <button class="flex items-center justify-center w-12 h-12 absolute top-24 right-6 bg-neutral-800 border border-neutral-500 rounded-md hover:bg-neutral-700" @click="issuesVisible = !issuesVisible">
-            <CircleDot />
-        </button>
     </div>
 </template>
 
@@ -36,7 +32,6 @@
     import { CircleDot } from "lucide-vue-next"
     import IssueDetails from "../components/IssueDetails.vue"
 
-    const issuesVisible = ref(false)
     const issuesListVisible = ref(true)
     const selectedIssue = ref({})
     const parsedIssueBody = ref({})

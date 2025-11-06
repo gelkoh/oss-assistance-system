@@ -1,5 +1,5 @@
 <template>
-    <div class="w-120 h-240 bg-neutral-800 absolute top-6 right-24 rounded-md border border-neutral-500 p-4">
+    <div class="w-120 h-240 bg-neutral-800 absolute top-6 left-24 rounded-md border border-neutral-500 p-4">
         <div class="flex flex-col h-full">
             Chatbot
 

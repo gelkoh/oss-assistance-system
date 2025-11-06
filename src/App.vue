@@ -18,27 +18,40 @@
         </div>
 
         <div v-else>
-            <button @click="isHomeView = true" class="absolute top-6 left-6 flex items-center justify-center w-12 h-12 bg-neutral-800 border border-neutral-500 rounded-md hover:bg-neutral-700">
-                <Home :size="18" />
+            <button @click="isHomeView = true" class="cursor-pointer absolute top-6 left-6 flex items-center justify-center w-12 h-12 bg-neutral-800 border border-neutral-500 rounded-md hover:bg-neutral-700">
+                <Home />
             </button>
 
-            <ul class="absolute top-24 left-6 bg-neutral-800/85 max-w-100 rounded-md border border-neutral-500 backdrop-blur-sm py-2">
-                <li v-for="file in fileTree.children">
-                    <FileTree :file class="min-w-xs border-none before:hidden after:hidden py-1" @file-selected="updateSelectedFilePath"/>
-                </li>
-            </ul>
+            <div class="absolute top-24 left-6 bg-neutral-500 border border-neutral-500 rounded-md flex flex-col gap-y-[1px]">
+                <button @click="showFileTree" ref="fileTreeButton" class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-t-md hover:bg-neutral-700">
+                    <Folder />
+                </button>
 
-            <!--<div class="absolute flex gap-2 top-4 left-[50%] -translate-x-[50%]">
+                <button @click="showChatbot" ref="chatbotButton" class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 hover:bg-neutral-700">
+                    <BotMessageSquare />
+                </button>
+
+                <button @click="showIssues" ref="issuesButton" class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-b-md hover:bg-neutral-700">
+                    <CircleDot />
+                </button>
+            </div>
+
+                     <!--<div class="absolute flex gap-2 top-4 left-[50%] -translate-x-[50%]">
                 <button :class="{ 'bg-orange-500': isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = true">Canvas View</button>
                 <button :class="{ 'bg-orange-500': !isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = false">File View</button>
             </div>-->
 
-            <div>
-                <Canvas v-if="isCanvasView" :fileTree />
+            <Canvas v-if="isCanvasView" :fileTree />
+            <FileContents v-else :filePath="selectedFilePath" />
 
-                <FileContents v-else :filePath="selectedFilePath" />
-                <Issues :issues :ownerName :repoName @load-repo-issues="loadRepoIssues" />
-            </div>
+            <ul v-if="fileTreeVisible" class="absolute top-6 left-24 bg-neutral-800/85 max-w-100 rounded-md border border-neutral-500 backdrop-blur-sm py-2">
+                <li v-for="file in fileTree.children">
+                    <FileTree :isOpen="true" :file class="min-w-xs border-none before:hidden after:hidden py-1" @file-selected="updateSelectedFilePath"/>
+                </li>
+            </ul>
+
+            <Chatbot v-if="chatbotVisible" />
+            <Issues :issues :ownerName :repoName @load-repo-issues="loadRepoIssues" v-if="issuesVisible" />
         </div>
     </div>
 </template>
@@ -53,7 +66,8 @@
     import Issues from "./components/Issues.vue"
     import GetStarted from "./components/GetStarted.vue"
     import CloneRepositoryPopup from "./components/CloneRepositoryPopup.vue"
-    import { Home } from "lucide-vue-next"
+    import { Home, CircleDot, Folder, BotMessageSquare } from "lucide-vue-next"
+    import Chatbot from "./components/Chatbot.vue"
 
     const isLoading = ref(false)
     const error = ref(null)
@@ -72,6 +86,14 @@
     const repoName = ref(null)
 
     const isCloneRepositoryPopupVisible = ref(false)
+
+    const fileTreeButton = ref(null)
+    const chatbotButton = ref(null)
+    const issuesButton = ref(null)
+
+    const fileTreeVisible = ref(false)
+    const chatbotVisible = ref(false)
+    const issuesVisible = ref(false)
 
     const readRepoContents = async (path) => {
         console.log("readRepoContents path: " + path)
@@ -176,5 +198,41 @@
         } else {
             console.warn("Cannot refresh issues: No GitHub repository detected")
         }
+    }
+
+    const showFileTree = () => {
+        console.log("Clicked show filetree button")
+
+        fileTreeButton.value.classList.add("bg-blue-500!")
+        chatbotButton.value.classList.remove("bg-blue-500!")
+        issuesButton.value.classList.remove("bg-blue-500!")
+
+        fileTreeVisible.value = !fileTreeVisible.value
+        issuesVisible.value = false
+        chatbotVisible.value = false
+    }
+
+    const showChatbot = () => {
+        console.log("Clicked show chatbot button")
+
+        chatbotButton.value.classList.add("bg-blue-500!")
+        fileTreeButton.value.classList.remove("bg-blue-500!")
+        issuesButton.value.classList.remove("bg-blue-500!")
+
+        chatbotVisible.value = !chatbotVisible.value
+        fileTreeVisible.value = false
+        issuesVisible.value = false
+    }
+
+    const showIssues = () => {
+        issuesButton.value.classList.add("bg-blue-500!")
+        fileTreeButton.value.classList.remove("bg-blue-500!")
+        chatbotButton.value.classList.remove("bg-blue-500!")
+
+        console.log("issuesVisible.value: " + issuesVisible.value)
+
+        issuesVisible.value = !issuesVisible.value
+        fileTreeVisible.value = false
+        chatbotVisible.value = false
     }
 </script>

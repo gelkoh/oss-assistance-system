@@ -33,18 +33,23 @@
 </template>
 
 <script setup>
-    import { ref } from "vue"
+    import { ref, onMounted } from "vue"
     import { Folder, FolderOpen, FileQuestionMark, SquarePen } from 'lucide-vue-next'
     import { useFileIcons } from "../composables/useFileIcons.js"
 
     const { getIconClass } = useFileIcons()
 
     const props = defineProps({
-        file: Object
+        file: Object,
+        isOpen: Boolean
     })
 
     const isOpen = ref(false)
     const iconClass = ref("")
+
+    onMounted(() => {
+        if (props.isOpen) isOpen.value = true
+    })
 
     if (props.file.type === "file") {
         const fileExtension = props.file.name.split(".").at(-1)
