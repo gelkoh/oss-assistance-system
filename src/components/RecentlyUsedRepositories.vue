@@ -1,5 +1,5 @@
 <template>
-    <div class="max-w-xl w-full">
+    <div>
         <div class="text-2xl font-bold">Recently used</div>
 
         <ul class="mt-2">

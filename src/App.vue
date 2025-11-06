@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="mt-40">
         <div v-if="fileTree === undefined || Object.keys(fileTree).length === 0" class="flex justify-center items-center flex-col">
             <h1 class="text-2xl text-white">Open source assistance system</h1>
 
@@ -9,9 +9,12 @@
                 </h2>
             </div>
 
-            <button @click="openRepo" :disabled="isLoading" class="mt-8 bg-orange-500 px-4 py-2 rounded-sm">Open Repository</button>
+            <div class="flex gap-x-12 mt-20 max-w-[1000px] w-full">
+                <RecentlyUsedRepositories @open-recent-repository="handleOpenRecentRepository" class="grow" />
+                <GetStarted @open-repo="openRepo" @show-clone-repository-popup="isCloneRepositoryPopupVisible = true" :isLoading />
+            </div>
 
-            <RecentlyUsedRepositories @open-recent-repository="handleOpenRecentRepository" />
+            <CloneRepositoryPopup v-if="isCloneRepositoryPopupVisible" @hide-clone-repository-popup="isCloneRepositoryPopupVisible = false"  @cloning-successful="readRepoContents" />
         </div>
 
         <div v-else>
@@ -44,6 +47,8 @@
     import Canvas from "./components/Canvas.vue"
     import RecentlyUsedRepositories from "./components/RecentlyUsedRepositories.vue"
     import Issues from "./components/Issues.vue"
+    import GetStarted from "./components/GetStarted.vue"
+    import CloneRepositoryPopup from "./components/CloneRepositoryPopup.vue"
 
     const isLoading = ref(false)
     const error = ref(null)
@@ -59,7 +64,13 @@
     const ownerName = ref(null)
     const repoName = ref(null)
 
+    const isCloneRepositoryPopupVisible = ref(false)
+
     const readRepoContents = async (path) => {
+        console.log("readRepoContents path: " + path)
+        console.log("typeof path: " + (typeof path))
+        await window.api.saveRepository(path)
+
         isLoading.value = true
         error.value = null
         fileTree.value = {}

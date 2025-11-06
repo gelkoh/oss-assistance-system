@@ -11,5 +11,8 @@ contextBridge.exposeInMainWorld("api", {
     removeRecentlyUsedRepository: (repoPath) => ipcRenderer.invoke("remove-recently-used-repository", repoPath),
     fetchRepoIssues: (owner, repo) => ipcRenderer.invoke("fetch-repo-issues", { owner, repo }),
     saveIssuesCache: (repoPath, issues) => ipcRenderer.invoke("save-issues-cache", { repoPath, issues }),
-    loadIssuesCache: (repoPath) => ipcRenderer.invoke("load-issues-cache", repoPath)
+    loadIssuesCache: (repoPath) => ipcRenderer.invoke("load-issues-cache", repoPath),
+    cloneRepository: (url, localPath) => ipcRenderer.invoke("clone-repository", { url, localPath }),
+    openTargetDirectoryDialog: (url, localPath) => ipcRenderer.invoke("open-target-directory-dialog"),
+    saveRepository: (repoPath) => ipcRenderer.invoke("save-repository", repoPath)
 })

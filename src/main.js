@@ -5,6 +5,7 @@ import { readFile } from "fs/promises"
 import { fileURLToPath } from "url"
 import settings from "electron-settings"
 import { Octokit } from "@octokit/core"
+import { exec } from "child_process"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -143,20 +144,24 @@ function createWindow() {
 
         if (!result.canceled && result.filePaths.length > 0) {
             event.sender.send("selected-directory", result.filePaths[0])
-
-            let recentlyUsedRepositoriesPaths = await settings.get("recentlyUsedRepositoriesPaths")
-            console.log("recentlyUsedRepositoriesPaths: " + recentlyUsedRepositoriesPaths)
-
-            if (recentlyUsedRepositoriesPaths === undefined) {
-                recentlyUsedRepositoriesPaths = [result.filePaths[0]]
-            } else if (!recentlyUsedRepositoriesPaths.includes(result.filePaths[0])) {
-                recentlyUsedRepositoriesPaths.push(result.filePaths[0])
-            }
-
-            await settings.set("recentlyUsedRepositoriesPaths", recentlyUsedRepositoriesPaths)
         } else {
             event.sender.send("directory-selection-canceled")
         }
+    })
+
+    ipcMain.handle("save-repository", async (event, repoPath) => {
+        let recentlyUsedRepositoriesPaths = await settings.get("recentlyUsedRepositoriesPaths")
+        console.log("recentlyUsedRepositoriesPaths: " + recentlyUsedRepositoriesPaths)
+        console.log("repoPath: " + repoPath)
+        console.log("typeof repoPath: " + (typeof repoPath))
+
+        if (recentlyUsedRepositoriesPaths === undefined) {
+            recentlyUsedRepositoriesPaths = [repoPath]
+        } else if (!recentlyUsedRepositoriesPaths.includes(repoPath)) {
+            recentlyUsedRepositoriesPaths.push(repoPath)
+        }
+
+        await settings.set("recentlyUsedRepositoriesPaths", recentlyUsedRepositoriesPaths)
     })
 
     ipcMain.handle("read-directory-tree", (event, repoPath) => {
@@ -192,6 +197,7 @@ function createWindow() {
     ipcMain.handle("get-recently-used-repositories", async () => {
         try {
             const recentlyUsedRepositoriesPaths = await settings.get("recentlyUsedRepositoriesPaths")
+            console.log("recentlyUsedRepositoriesPaths: " + recentlyUsedRepositoriesPaths)
             return recentlyUsedRepositoriesPaths
         } catch(err) {
             console.error("An error occurred getting the recently used repositories", err)
@@ -221,8 +227,6 @@ function createWindow() {
     ipcMain.handle("open-path", (event, filePath) => {
         try {
             console.log("File to be opened: " + filePath)
-            console.log(filePath)
-            console.log(typeof filePath)
             shell.openPath(filePath)
         }  catch(err) {
             console.error("An error occurred opening the file in the default file editor: ", err.message)
@@ -275,6 +279,67 @@ function createWindow() {
         } catch(err) {
             console.error("Error loading cached issues:", err)
             return []
+        }
+    })
+
+    ipcMain.handle("clone-repository", (event, { url, localPath }) => {
+        let repoName
+
+        try {
+            const urlParts = url.split("/")
+
+            repoName = urlParts.pop()
+
+            if (repoName.endsWith(".git")) {
+                repoName = repoName.slice(0, -4)
+            }
+
+            if (!repoName) {
+                throw new Error("Couldn't extract repository name from the URL")
+            }
+        } catch(err) {
+            return Promise.reject(new Error(`Invalid repository URL: ${url}`))
+        }
+
+        const finalTargetPath = path.join(localPath, repoName)
+
+        const command = `git clone ${url} "${finalTargetPath}"`
+
+        console.log(`Executing clone command: ${command}`)
+
+        return new Promise((resolve, reject) => {
+            exec(command, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`Git Clone Error (Code ${error.code}): ${stderr}`)
+
+                    const errorMessage = stderr || stdout || "Unknown Git-Error."
+
+                    if (error.code === 127) {
+                        reject(new Error("The 'git'-command wasn't found. Please make sure that Git is installed and available in your PATH"))
+                    } else {
+                        reject(new Error(`Cloning failed: ${errorMessage.trim()}`))
+                    }
+
+                    return
+                }
+
+                console.log(`Repository cloned successfully to ${finalTargetPath}`)
+                resolve({ success: true, path: finalTargetPath })
+            })
+        })
+    })
+
+    ipcMain.handle("open-target-directory-dialog", async (event) => {
+        const senderWindow = BrowserWindow.fromWebContents(event.sender)
+
+        const result = await dialog.showOpenDialog(senderWindow, {
+            properties: ["openDirectory"]
+        })
+
+        if (!result.canceled && result.filePaths.length > 0) {
+            return result.filePaths[0]
+        } else {
+            return null
         }
     })
 }
