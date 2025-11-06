@@ -14,5 +14,6 @@ contextBridge.exposeInMainWorld("api", {
     loadIssuesCache: (repoPath) => ipcRenderer.invoke("load-issues-cache", repoPath),
     cloneRepository: (url, localPath) => ipcRenderer.invoke("clone-repository", { url, localPath }),
     openTargetDirectoryDialog: (url, localPath) => ipcRenderer.invoke("open-target-directory-dialog"),
-    saveRepository: (repoPath) => ipcRenderer.invoke("save-repository", repoPath)
+    saveRepository: (repoPath) => ipcRenderer.invoke("save-repository", repoPath),
+    sendChatbotMessage: (model, chatHistory) => ipcRenderer.invoke("send-chatbot-message", { model, chatHistory })
 })

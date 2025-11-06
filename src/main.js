@@ -6,6 +6,7 @@ import { fileURLToPath } from "url"
 import settings from "electron-settings"
 import { Octokit } from "@octokit/core"
 import { exec } from "child_process"
+import { Ollama } from "ollama"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -13,6 +14,7 @@ const __dirname = path.dirname(__filename)
 let currentRepoInfo = { ownerName: null, repoName: null }
 
 const octokit = new Octokit({})
+const ollama = new Ollama({})
 
 const readFileContents = async (filePath) => {
     try {
@@ -340,6 +342,33 @@ function createWindow() {
             return result.filePaths[0]
         } else {
             return null
+        }
+    })
+
+    ipcMain.handle("send-chatbot-message", async (event, { model, chatHistory }) => {
+        const messages = [...chatHistory]
+
+        try {
+            console.log(`Sending prompt to Ollama model ${model}...`)
+
+            const response = await ollama.chat({
+                model: model,
+                messages: messages
+            })
+
+            return response.message.content.trim()
+        } catch(err) {
+            console.error("Error communicating with Ollama: ", err)
+
+            if (err.message && err.message.includes("connect ECONNREFUSED")) {
+                throw new Error("Ollama server not reachable. Please start Ollama.")
+            }
+
+            if (err.message && err.message.includes("pull") || err.message.includes("not found")) {
+                throw new Error(`Model: '${model}' not found. Please run 'ollama pull ${model}'.`)
+            }
+
+            throw new Error(`Chatbot error: ${err.message}`)
         }
     })
 }

@@ -3,7 +3,7 @@
         <div v-if="fileContents !== ''">
             File Contents
 
-            <div class="mt-4">
+            <div class="mt-4 overflow-y-auto">
                 <highlightjs v-if="fileContents !== ''" autodetect :code="fileContents" class="whitespace-pre-wrap overflow-y-auto max-h-[800px]" />
             </div>
         </div>
