@@ -1,6 +1,6 @@
 <template>
     <div class="mt-40">
-        <div v-if="fileTree === undefined || Object.keys(fileTree).length === 0" class="flex justify-center items-center flex-col">
+        <div v-if="isHomeView" class="flex justify-center items-center flex-col">
             <h1 class="text-2xl text-white">Open source assistance system</h1>
 
             <div class="text-6xl text-center font-bold text-white">
@@ -18,7 +18,11 @@
         </div>
 
         <div v-else>
-            <ul class="absolute top-6 left-6 bg-neutral-800/85 max-w-100 rounded-md border border-neutral-500 backdrop-blur-sm py-2">
+            <button @click="isHomeView = true" class="absolute top-6 left-6 flex items-center justify-center w-12 h-12 bg-neutral-800 border border-neutral-500 rounded-md hover:bg-neutral-700">
+                <Home :size="18" />
+            </button>
+
+            <ul class="absolute top-24 left-6 bg-neutral-800/85 max-w-100 rounded-md border border-neutral-500 backdrop-blur-sm py-2">
                 <li v-for="file in fileTree.children">
                     <FileTree :file class="min-w-xs border-none before:hidden after:hidden py-1" @file-selected="updateSelectedFilePath"/>
                 </li>
@@ -49,11 +53,14 @@
     import Issues from "./components/Issues.vue"
     import GetStarted from "./components/GetStarted.vue"
     import CloneRepositoryPopup from "./components/CloneRepositoryPopup.vue"
+    import { Home } from "lucide-vue-next"
 
     const isLoading = ref(false)
     const error = ref(null)
     const repoPath = ref("")
     const fileTree = ref({})
+
+    const isHomeView = ref(true)
 
     const isCanvasView = ref(true)
 
@@ -84,6 +91,8 @@
             fileTree.value = tree
 
             console.log("Repo info", repoInfo)
+
+            isHomeView.value = false
 
             if (repoInfo && repoInfo.ownerName && repoInfo.repoName) {
                 console.log("Inside readRepoContents: repoInfo.ownerName: " + repoInfo.ownerName + ", repoInfo.repoName: " + repoInfo.repoName)
