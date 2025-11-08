@@ -26,16 +26,24 @@ const readFileContents = async (filePath) => {
     }
 }
 
-function buildTree(dirPath) {
+function buildTree(dirPath, currentDepth) {
+    console.log("CALLED BUILD TREE")
     const stats = fs.statSync(dirPath)
-    if (!stats.isDirectory()) return null
+    if (!stats.isDirectory()) return []
 
-    let files = fs.readdirSync(dirPath, { withFileTypes: true })
+    let dirEntries
 
-    files = files.filter(entry => {
-        if (entry.isDirectory() && entry.name === "node_modules") {
-            return false
-        }
+    try {
+        dirEntries = fs.readdirSync(dirPath, { withFileTypes: true })
+    } catch(err) {
+        console.error("readdir failed for", dirPath, err)
+        return []
+    }
+
+    const entryDepth = currentDepth + 1
+
+    const filtered = dirEntries.filter(entry => {
+        if (entry.name === "node_modules") return false
 
         if (entry.isDirectory() && entry.name === ".git") {
             const gitDirPath = path.join(dirPath, entry.name)
@@ -88,8 +96,8 @@ function buildTree(dirPath) {
 
         return true
     })
- 
-    return files.map((entry) => {
+
+    return filtered.map((entry) => {
         const fullPath = path.join(dirPath, entry.name)
         const isDir = entry.isDirectory()
 
@@ -97,15 +105,52 @@ function buildTree(dirPath) {
             name: entry.name,
             path: fullPath,
             type: isDir ? "directory" : "file",
-            children: isDir ? buildTree(fullPath) : []
+            depth: entryDepth,
+            children: isDir ? buildTree(fullPath, entryDepth) : []
         }
     })
+
+
+    //const result = []
+
+    //for (const entry of filtered) {
+    //    const fullPath = path.join(dirPath, entry.name)
+
+    //    let entryStats
+
+    //    try {
+    //        entryStats = fs.statSync(fullPath)
+    //    } catch (err) {
+    //        console.warn("Skipping unreadable entry: ", fullPath, err && err.code)
+    //        continue
+    //    }
+
+    //    const isDir = entryStats.isDirectory()
+
+    //    const node = {
+    //        name: entry.name,
+    //        path: fullPath,
+    //        type: isDir ? "directory" : "file",
+    //        depth: entryDepth,
+    //        children: []
+    //    }
+
+    //    if (isDir) {
+    //        node.children = buildTree(fullPath, entryDepth)
+    //    }
+
+    //    result.push(node)
+    //}
+
+    //return result
 }
 
 function buildRepoTreeWrapper(repoPath) {
     const dirName = path.basename(repoPath)
 
-    const children = buildTree(repoPath)
+    const children = buildTree(repoPath, 0) || []
+    console.log("CHILDREN: ", children)
+    console.log("CHILDREN LENGTH: ", children.length)
 
     return {
         name: "root",
@@ -113,7 +158,8 @@ function buildRepoTreeWrapper(repoPath) {
             name: dirName,
             path: repoPath,
             type: "directory",
-            children: children || []
+            depth: 0,
+            children: children
         }]
     }
 }

@@ -61,13 +61,13 @@
 
             <ul
                 v-if="activePopover === 'fileTree'"
-                class="absolute top-6 left-24 bg-neutral-800/85 max-w-100 rounded-md border border-neutral-500 backdrop-blur-sm py-2"
+                class="absolute top-6 left-24 bg-neutral-800/85 w-100 rounded-md border border-neutral-500 backdrop-blur-sm py-2"
             >
                 <li v-for="file in fileTree.children">
                     <FileTree
                         :isOpen="true"
                         :file
-                        class="min-w-xs border-none before:hidden after:hidden py-1" 
+                        class="min-w-xs border-none"
                         @file-selected="updateSelectedFilePath"
                     />
                 </li>
@@ -149,6 +149,7 @@
             const { fileTree: tree, repoInfo } = await window.api.readDirectoryContents(path)
 
             fileTree.value = tree
+            console.log(fileTree.value)
 
             console.log("Repo info", repoInfo)
 
