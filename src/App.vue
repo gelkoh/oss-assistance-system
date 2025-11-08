@@ -23,15 +23,30 @@
             </button>
 
             <div class="absolute top-24 left-6 bg-neutral-500 border border-neutral-500 rounded-md flex flex-col gap-y-[1px]">
-                <button @click="showFileTree" ref="fileTreeButton" class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-t-md hover:bg-neutral-700">
+                <button
+                    @click="toggleFileTree"
+                    ref="fileTreeButton"
+                    :class="{ 'bg-blue-500!': activePopover === 'fileTree' }"
+                    class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-t-md hover:bg-neutral-700"
+                >
                     <Folder />
                 </button>
 
-                <button @click="showChatbot" ref="chatbotButton" class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 hover:bg-neutral-700">
+                <button
+                    @click="toggleChatbot"
+                    ref="chatbotButton"
+                    :class="{ 'bg-blue-500!': activePopover === 'chatbot' }"
+                    class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 hover:bg-neutral-700"
+                >
                     <BotMessageSquare />
                 </button>
 
-                <button @click="showIssues" ref="issuesButton" class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-b-md hover:bg-neutral-700">
+                <button
+                    @click="toggleIssues"
+                    ref="issuesButton"
+                    :class="{ 'bg-blue-500!': activePopover === 'issues' }"
+                    class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-b-md hover:bg-neutral-700"
+                >
                     <CircleDot />
                 </button>
             </div>
@@ -44,14 +59,33 @@
             <Canvas v-if="isCanvasView" :fileTree />
             <FileContents v-else :filePath="selectedFilePath" />
 
-            <ul v-if="fileTreeVisible" class="absolute top-6 left-24 bg-neutral-800/85 max-w-100 rounded-md border border-neutral-500 backdrop-blur-sm py-2">
+            <ul
+                v-if="activePopover === 'fileTree'"
+                class="absolute top-6 left-24 bg-neutral-800/85 max-w-100 rounded-md border border-neutral-500 backdrop-blur-sm py-2"
+            >
                 <li v-for="file in fileTree.children">
-                    <FileTree :isOpen="true" :file class="min-w-xs border-none before:hidden after:hidden py-1" @file-selected="updateSelectedFilePath"/>
+                    <FileTree
+                        :isOpen="true"
+                        :file
+                        class="min-w-xs border-none before:hidden after:hidden py-1" 
+                        @file-selected="updateSelectedFilePath"
+                    />
                 </li>
             </ul>
 
-            <Chatbot v-if="chatbotVisible" :currentTargetIssue />
-            <Issues :issues :ownerName :repoName @load-repo-issues="loadRepoIssues" v-if="issuesVisible" @target-issue="targetIssue" />
+            <Chatbot
+                v-if="activePopover === 'chatbot'"
+                :currentTargetIssue
+            />
+
+            <Issues
+                v-if="activePopover === 'issues'"
+                :issues
+                :ownerName
+                :repoName
+                @load-repo-issues="loadRepoIssues"
+                @target-issue="targetIssue" 
+            />
         </div>
     </div>
 </template>
@@ -94,6 +128,8 @@
     const fileTreeVisible = ref(false)
     const chatbotVisible = ref(false)
     const issuesVisible = ref(false)
+
+    const activePopover = ref(null)
 
     const currentTargetIssue = ref({})
 
@@ -206,41 +242,17 @@
         }
     }
 
-    const showFileTree = () => {
-        console.log("Clicked show filetree button")
-
-        fileTreeButton.value.classList.add("bg-blue-500!")
-        chatbotButton.value.classList.remove("bg-blue-500!")
-        issuesButton.value.classList.remove("bg-blue-500!")
-
-        fileTreeVisible.value = !fileTreeVisible.value
-        issuesVisible.value = false
-        chatbotVisible.value = false
+    const togglePopover = (popoverName) => {
+        if (activePopover.value === popoverName) {
+            activePopover.value = null
+        } else {
+            activePopover.value = popoverName
+        }
     }
 
-    const showChatbot = () => {
-        console.log("Clicked show chatbot button")
-
-        chatbotButton.value.classList.add("bg-blue-500!")
-        fileTreeButton.value.classList.remove("bg-blue-500!")
-        issuesButton.value.classList.remove("bg-blue-500!")
-
-        chatbotVisible.value = !chatbotVisible.value
-        fileTreeVisible.value = false
-        issuesVisible.value = false
-    }
-
-    const showIssues = () => {
-        issuesButton.value.classList.add("bg-blue-500!")
-        fileTreeButton.value.classList.remove("bg-blue-500!")
-        chatbotButton.value.classList.remove("bg-blue-500!")
-
-        console.log("issuesVisible.value: " + issuesVisible.value)
-
-        issuesVisible.value = !issuesVisible.value
-        fileTreeVisible.value = false
-        chatbotVisible.value = false
-    }
+    const toggleFileTree = () => togglePopover("fileTree")
+    const toggleChatbot = () => togglePopover("chatbot")
+    const toggleIssues = () => togglePopover("issues")
 
     const targetIssue = (targetedIssue) => {
         issues.value.forEach(issue => {
