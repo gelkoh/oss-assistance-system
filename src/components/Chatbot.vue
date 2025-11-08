@@ -3,7 +3,7 @@
         <div class="flex flex-col h-full">
             Chatbot
 
-            <div class="mt-4">
+            <div class="mt-4 overflow-y-auto">
                 <template v-for="(message, index) in chatHistory" :key="index">
                     <div v-if="message.sender === 'assistant'" class="mt-2">
                         {{ message.text }}
@@ -32,6 +32,10 @@
     import { ref } from "vue"
     import { SendHorizontal } from "lucide-vue-next"
 
+    const props = defineProps({
+        currentTargetIssue: Object
+    })
+
     const chatHistory = ref([])
     const currentMessage = ref("")
     const isProcessing = ref(false)
@@ -42,6 +46,7 @@
         if (!currentMessage.value.trim()) return
 
         const userPrompt = currentMessage.value.trim()
+        console.log("User prompt: ", userPrompt)
         chatHistory.value.push({ sender: "user", text: userPrompt })
         currentMessage.value = ""
         isProcessing.value = true
@@ -51,17 +56,24 @@
 
         const rawChatHistory = JSON.parse(JSON.stringify(chatHistory.value))
 
-        const chatHistoryMap = rawChatHistory
+        const issueMessage = {
+            role: "system",
+            content: props.currentTargetIssue.body
+        }
+
+        const chatHistoryArray = rawChatHistory
             .filter(msg => msg.text !== '...')
             .map(msg => ({
                 role: msg.sender === "user" ? "user" : "assistant",
                 content: msg.text
             }))
 
+        chatHistoryArray.unshift(issueMessage)
+
         try {
             const botResponse = await window.api.sendChatbotMessage(
                 modelName,
-                chatHistoryMap
+                chatHistoryArray
             )
 
             chatHistory.value[chatHistory.value.length - 1].text = botResponse

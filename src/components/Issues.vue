@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="w-120 h-240 bg-neutral-800 absolute top-6 left-24 rounded-md border border-neutral-500 p-4">
+        <div class="w-180 h-240 bg-neutral-800 absolute top-6 left-24 rounded-md border border-neutral-500 p-4">
             <div v-if="issuesListVisible">
                 <div class="text-xl">
                     Issues
@@ -9,10 +9,7 @@
                 <div>
                     <div class="text-lg">{{ issues.length }} open issues</div>
 
-                    <div v-if="issues.length > 0" v-for="issue in issues" class="mt-2 p-1 bg-neutral-700 rounded-sm">
-                        <div @click="viewIssue(issue)" class="text-blue-500 text-lg cursor-pointer inline-block">{{ issue.title }}</div>
-                        <div>#{{ issue.number }} by {{ issue.user.login }}</div>
-                    </div>
+                    <Issue v-if="issues.length > 0" v-for="(issue, index) in issues" :issue :key="index" @view-issue="viewIssue" @target-issue="$emit('target-issue', $event)" />
                 </div>
 
                 <button @click="$emit('load-repo-issues')" class="px-3 py-1 bg-blue-600 rounded-sm hover:bg-blue-500 mt-4">
@@ -29,8 +26,9 @@
 
 <script setup>
     import { ref, onMounted } from "vue"
-    import { CircleDot } from "lucide-vue-next"
+    import { Circle, CircleDot, Target } from "lucide-vue-next"
     import IssueDetails from "../components/IssueDetails.vue"
+    import Issue from "../components/Issue.vue"
 
     const issuesListVisible = ref(true)
     const selectedIssue = ref({})

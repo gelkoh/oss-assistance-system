@@ -50,8 +50,8 @@
                 </li>
             </ul>
 
-            <Chatbot v-if="chatbotVisible" />
-            <Issues :issues :ownerName :repoName @load-repo-issues="loadRepoIssues" v-if="issuesVisible" />
+            <Chatbot v-if="chatbotVisible" :currentTargetIssue />
+            <Issues :issues :ownerName :repoName @load-repo-issues="loadRepoIssues" v-if="issuesVisible" @target-issue="targetIssue" />
         </div>
     </div>
 </template>
@@ -94,6 +94,8 @@
     const fileTreeVisible = ref(false)
     const chatbotVisible = ref(false)
     const issuesVisible = ref(false)
+
+    const currentTargetIssue = ref({})
 
     const readRepoContents = async (path) => {
         console.log("readRepoContents path: " + path)
@@ -184,6 +186,10 @@
             const freshIssues = await window.api.fetchRepoIssues(owner, repo)
             issues.value = freshIssues
 
+            issues.value.forEach(issue => {
+                issue["is_targeted"] = false
+            })
+
             await window.api.saveIssuesCache(repoPath, freshIssues)
 
             console.log(`Successfully fetched and cached ${freshIssues.length} fresh open issues`)
@@ -234,5 +240,19 @@
         issuesVisible.value = !issuesVisible.value
         fileTreeVisible.value = false
         chatbotVisible.value = false
+    }
+
+    const targetIssue = (targetedIssue) => {
+        issues.value.forEach(issue => {
+            issue["is_targeted"] = false
+        })
+
+        issues.value.find(issue => {
+            if (issue.id === targetedIssue.id) {
+                issue["is_targeted"] = true
+                currentTargetIssue.value = issue
+                return true
+            }
+        })
     }
 </script>
