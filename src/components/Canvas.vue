@@ -39,6 +39,10 @@
     const MIN_SCALE = 0.25
     const MAX_SCALE = 2
 
+    const LINE_NUMBERS_WIDTH = 40
+    const CODE_HORIZONTAL_OFFSET = 5
+    const CODE_WIDTH = 808
+
     onMounted(async () => {
         const rootData = d3.hierarchy(props.fileTree.children[0])
 
@@ -233,7 +237,7 @@
             // Draw node rectangle
             nodeG
                 .append("rect")
-                .attr("width", 808)
+                .attr("width", LINE_NUMBERS_WIDTH + CODE_HORIZONTAL_OFFSET + CODE_WIDTH)
                 .attr("height", 24)
                 .attr("y", -12)
                 .attr("rx", 4)
@@ -266,13 +270,14 @@
                 .attr("x", 26)
                 .text(node.data.name)
                 .attr("fill", "white")
+                .attr("font-family", "monospace")
 
             // Draw edit icon
             nodeG
                 .append("foreignObject")
                 .attr("width", 16)
                 .attr("height", 16)
-                .attr("x", 786)
+                .attr("x", LINE_NUMBERS_WIDTH + CODE_HORIZONTAL_OFFSET + CODE_WIDTH - 22)
                 .attr("y", -8)
                 .html(`
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
@@ -282,18 +287,24 @@
                     window.api.openPath(node.data.path)
                 })
 
+            const codeGroup = nodeG.append("g").attr("class", "code-group")
+
+            // Style code group
+            codeGroup
+                .attr("class", "p-2")
 
             // Draw file contents
             const result = hljs.highlightAuto(node.data.code)
             const colorString = "1px solid " + node.colorBright
 
-            const content = nodeG
+            const content = codeGroup
                 .append("foreignObject")
-                .attr("width", 808)
+                .attr("width", LINE_NUMBERS_WIDTH + CODE_HORIZONTAL_OFFSET + CODE_WIDTH)
+                .attr("x", 0)
                 .attr("y", 11)
                 .html(`
                     <div xmlns="http://www.w3.org/1999/xhtml">
-                        <pre><code class="hljs whitespace-pre-wrap rounded-b-md" style="background: ${node.darkColor} !important; border: 1px solid ${node.brightColor}">${result.value}</code></pre>
+                        <pre><code class="font-[monospace]! text-base hljs whitespace-pre-wrap rounded-b-md pt-2! pb-2! pr-3! pl-14!" style="background: ${node.darkColor} !important; border: 1px solid ${node.brightColor}">${result.value}</code></pre>
                     </div>
                 `)
 
@@ -304,7 +315,26 @@
                 node.data.renderedHeight = rect.height
             }
 
+            const amountOfLines = node.data.renderedHeight / (16 * 1.5)
+            const lineNumbersContainer = document.createElement("div")
+
+            for (let i = 1; i <= amountOfLines; i++) {
+                const lineNumber = document.createElement("div")
+                lineNumber.textContent = i.toString()
+                lineNumbersContainer.appendChild(lineNumber)
+            }
+
+            const lineNumbers = codeGroup
+                .append("foreignObject")
+                .attr("width", LINE_NUMBERS_WIDTH)
+                .attr("class", "pt-[9px] pl-3 font-[monospace] text-base")
+                .attr("x", 0)
+                .attr("y", 11)
+                .html(lineNumbersContainer.innerHTML)
+
+            // Adjust height accordingly
             if (node.data.showContent) {
+                lineNumbers.attr("height", node.data.renderedHeight)
                 content.attr("height", node.data.renderedHeight)
             }
         }

@@ -109,40 +109,6 @@ function buildTree(dirPath, currentDepth) {
             children: isDir ? buildTree(fullPath, entryDepth) : []
         }
     })
-
-
-    //const result = []
-
-    //for (const entry of filtered) {
-    //    const fullPath = path.join(dirPath, entry.name)
-
-    //    let entryStats
-
-    //    try {
-    //        entryStats = fs.statSync(fullPath)
-    //    } catch (err) {
-    //        console.warn("Skipping unreadable entry: ", fullPath, err && err.code)
-    //        continue
-    //    }
-
-    //    const isDir = entryStats.isDirectory()
-
-    //    const node = {
-    //        name: entry.name,
-    //        path: fullPath,
-    //        type: isDir ? "directory" : "file",
-    //        depth: entryDepth,
-    //        children: []
-    //    }
-
-    //    if (isDir) {
-    //        node.children = buildTree(fullPath, entryDepth)
-    //    }
-
-    //    result.push(node)
-    //}
-
-    //return result
 }
 
 function buildRepoTreeWrapper(repoPath) {
