@@ -18,25 +18,31 @@
         </div>
 
         <div v-else>
-            <button @click="isHomeView = true" class="cursor-pointer absolute top-6 left-6 flex items-center justify-center w-12 h-12 bg-neutral-800 border border-neutral-500 rounded-md hover:bg-neutral-700">
-                <Home />
-            </button>
-
-            <div class="absolute top-24 left-6 bg-neutral-500 border border-neutral-500 rounded-md flex flex-col gap-y-[1px]">
-                <button
-                    @click="toggleFileTree"
-                    ref="fileTreeButton"
-                    :class="{ 'bg-blue-500!': activePopover === 'fileTree' }"
-                    class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-t-md hover:bg-neutral-700"
-                >
-                    <Folder />
+            <div class="flex p-2 flex-col gap-2 absolute top-0 h-screen left-0 bg-neutral-800">
+                <button @click="isHomeView = true" class="transition cursor-pointer flex items-center justify-center w-11 h-11 bg-neutral-800 rounded-md hover:bg-neutral-700">
+                    <Home />
                 </button>
+
+                <div class="relative group/button">
+                    <button
+                        @click="toggleFileTree"
+                        ref="fileTreeButton"
+                        :class="{ 'bg-white! text-black': activePopover === 'fileTree' }"
+                        class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
+                    >
+                        <Folder />
+                    </button>
+
+                    <div class="opacity-0 group-hover/button:opacity-1 absolute left-14 top-[50%] -translate-y-[50%] bg-neutral-800 whitespace-nowrap rounded-md px-2 py-1 pointer-events-none">
+                        File Explorer
+                    </div>
+                </div>
 
                 <button
                     @click="toggleChatbot"
                     ref="chatbotButton"
-                    :class="{ 'bg-blue-500!': activePopover === 'chatbot' }"
-                    class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 hover:bg-neutral-700"
+                    :class="{ 'bg-white! text-black': activePopover === 'chatbot' }"
+                    class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 hover:bg-neutral-700 rounded-md"
                 >
                     <BotMessageSquare />
                 </button>
@@ -44,10 +50,24 @@
                 <button
                     @click="toggleIssues"
                     ref="issuesButton"
-                    :class="{ 'bg-blue-500!': activePopover === 'issues' }"
-                    class="w-12 h-12 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-b-md hover:bg-neutral-700"
+                    :class="{ 'bg-white! text-black': activePopover === 'issues' }"
+                    class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
                 >
                     <CircleDot />
+                </button>
+
+                <button
+                    :class="{ 'bg-white! text-black': activePopover === 'help' }"
+                    class="transition mt-auto w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
+                >
+                    <CircleQuestionMark />
+                </button>
+
+                <button
+                    :class="{ 'bg-white! text-black': activePopover === 'settings' }"
+                    class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
+                >
+                    <Settings />
                 </button>
             </div>
 
@@ -57,6 +77,7 @@
             </div>-->
 
             <Canvas v-if="isCanvasView" :fileTree />
+
             <FileContents v-else :filePath="selectedFilePath" />
 
             <ul
@@ -100,7 +121,7 @@
     import Issues from "./components/Issues.vue"
     import GetStarted from "./components/GetStarted.vue"
     import CloneRepositoryPopup from "./components/CloneRepositoryPopup.vue"
-    import { Home, CircleDot, Folder, BotMessageSquare } from "lucide-vue-next"
+    import { Home, CircleDot, Folder, BotMessageSquare, CircleQuestionMark, Settings } from "lucide-vue-next"
     import Chatbot from "./components/Chatbot.vue"
 
     const isLoading = ref(false)
@@ -254,6 +275,8 @@
     const toggleFileTree = () => togglePopover("fileTree")
     const toggleChatbot = () => togglePopover("chatbot")
     const toggleIssues = () => togglePopover("issues")
+    const toggleHelp = () => togglePopover("help")
+    const toggleSettings = () => togglePopover("settings")
 
     const targetIssue = (targetedIssue) => {
         issues.value.forEach(issue => {
