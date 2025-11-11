@@ -80,33 +80,52 @@
 
             <FileContents v-else :filePath="selectedFilePath" />
 
-            <ul
-                v-if="activePopover === 'fileTree'"
-                class="absolute top-6 left-24 bg-neutral-800/85 w-100 rounded-md border border-neutral-500 backdrop-blur-sm py-2"
+            <Panel
+                v-if="activePopover === 'fileTree'" 
+                :icon="Folder"
+                title="File Explorer"
+                panelId="fileTree"
+                @close-panel="closePanel"
             >
-                <li v-for="file in fileTree.children">
-                    <FileTree
-                        :isOpen="true"
-                        :file
-                        class="min-w-xs border-none"
-                        @file-selected="updateSelectedFilePath"
-                    />
-                </li>
-            </ul>
+                <ul>
+                    <li v-for="file in fileTree.children">
+                        <FileTree
+                            :isOpen="true"
+                            :file
+                            class="min-w-xs border-none"
+                            @file-selected="updateSelectedFilePath"
+                        />
+                    </li>
+                </ul>
+            </Panel>
 
-            <Chatbot
-                v-if="activePopover === 'chatbot'"
-                :currentTargetIssue
-            />
+            <Panel
+                v-if="activePopover === 'chatbot'" 
+                :icon="BotMessageSquare"
+                title="Chatbot"
+                panelId="chatbot"
+                @close-panel="closePanel"
+            >
+                <Chatbot
+                    :currentTargetIssue
+                />
+            </Panel>
 
-            <Issues
+            <Panel
                 v-if="activePopover === 'issues'"
-                :issues
-                :ownerName
-                :repoName
-                @load-repo-issues="loadRepoIssues"
-                @target-issue="targetIssue" 
-            />
+                :icon="CircleDot"
+                title="Issues"
+                panelId="issues"
+                @close-panel="closePanel"
+            >
+                <Issues
+                    :issues
+                    :ownerName
+                    :repoName
+                    @load-repo-issues="loadRepoIssues"
+                    @target-issue="targetIssue" 
+                />
+            </Panel>
         </div>
     </div>
 </template>
@@ -123,12 +142,13 @@
     import CloneRepositoryPopup from "./components/CloneRepositoryPopup.vue"
     import { Home, CircleDot, Folder, BotMessageSquare, CircleQuestionMark, Settings } from "lucide-vue-next"
     import Chatbot from "./components/Chatbot.vue"
+    import Panel from "./components/Panel.vue"
 
     const isLoading = ref(false)
     const error = ref(null)
     const repoPath = ref("")
     const fileTree = ref({})
-
+ 
     const isHomeView = ref(true)
 
     const isCanvasView = ref(true)
@@ -170,7 +190,7 @@
             const { fileTree: tree, repoInfo } = await window.api.readDirectoryContents(path)
 
             fileTree.value = tree
-            console.log(fileTree.value)
+            console.log("Filetree:", fileTree.value)
 
             console.log("Repo info", repoInfo)
 
@@ -290,5 +310,9 @@
                 return true
             }
         })
+    }
+
+    const closePanel = (panelId) => {
+        togglePopover(panelId)
     }
 </script>

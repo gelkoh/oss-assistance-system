@@ -1,11 +1,7 @@
 <template>
-    <div>
-        <div class="w-180 h-240 bg-neutral-800 absolute top-6 left-24 rounded-md border border-neutral-500 p-4">
+    <!--<div>
+        <div class="w-180 h-240 bg-neutral-800 absolute top-6 left-24 rounded-md border border-neutral-500 p-4">-->
             <div v-if="issuesListVisible">
-                <div class="text-xl">
-                    Issues
-                </div>
-
                 <div>
                     <div class="text-lg">{{ issues.length }} open issues</div>
 
@@ -20,8 +16,8 @@
             <div v-else class="relative overflow-y-auto max-h-full">
                 <IssueDetails :selectedIssue :parsedIssueBody @go-back-to-issues-list="handleGoBackToIssuesList" />
             </div>
-        </div>
-    </div>
+        <!--</div>
+    </div>-->
 </template>
 
 <script setup>

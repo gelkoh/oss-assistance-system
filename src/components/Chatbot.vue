@@ -1,29 +1,25 @@
 <template>
-    <div class="w-120 h-240 bg-neutral-800 absolute top-6 left-24 rounded-md border border-neutral-500 p-4">
-        <div class="flex flex-col h-full">
-            Chatbot
+    <div class="flex flex-col h-full">
+        <div class="mt-4 overflow-y-auto">
+            <template v-for="(message, index) in chatHistory" :key="index">
+                <div v-if="message.sender === 'assistant'" class="mt-2">
+                    {{ message.text }}
+                </div>
 
-            <div class="mt-4 overflow-y-auto">
-                <template v-for="(message, index) in chatHistory" :key="index">
-                    <div v-if="message.sender === 'assistant'" class="mt-2">
-                        {{ message.text }}
-                    </div>
+                <div v-else class="mt-2 bg-neutral-900 p-2 rounded-md">
+                    {{ message.text }}
+                </div>
+            </template>
 
-                    <div v-else class="mt-2 bg-neutral-900 p-2 rounded-md">
-                        {{ message.text }}
-                    </div>
-                </template>
+            <p v-if="error" class="text-red-500">{{ error }}</p>
+        </div>
 
-                <p v-if="error" class="text-red-500">{{ error }}</p>
-            </div>
+        <div class="relative mt-auto h-24">
+            <textarea v-model="currentMessage" @keyup.enter="sendMessage" :disabled="isProcessing" placeholder="Enter a message" class="bg-neutral-700 p-4 rounded-md resize-none w-full h-full" />
 
-            <div class="relative mt-auto h-24">
-                <textarea v-model="currentMessage" @keyup.enter="sendMessage" :disabled="isProcessing" placeholder="Enter a message" class="bg-neutral-700 p-4 rounded-md resize-none w-full h-full" />
-
-                <button @click="sendMessage" class="absolute bottom-2 right-2 bg-blue-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-blue-500">
-                    <SendHorizontal />
-                </button>
-            </div>
+            <button @click="sendMessage" class="absolute bottom-2 right-2 bg-blue-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-blue-500">
+                <SendHorizontal />
+            </button>
         </div>
     </div>
 </template>
