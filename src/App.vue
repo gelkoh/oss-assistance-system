@@ -81,18 +81,20 @@
             <FileContents v-else :filePath="selectedFilePath" />
 
             <Panel
-                v-if="activePopover === 'fileTree'" 
+                v-if="activePopover === 'fileTree'"
                 :icon="Folder"
                 title="File Explorer"
                 panelId="fileTree"
                 @close-panel="closePanel"
             >
+                <input type="search" class="p-1 rounded-sm mb-5 w-full border border-neutral-500" placeholder="Find" />
+
                 <ul>
                     <li v-for="file in fileTree.children">
                         <FileTree
                             :isOpen="true"
                             :file
-                            class="min-w-xs border-none"
+                            class="min-w-xs border-none pt-0!"
                             @file-selected="updateSelectedFilePath"
                         />
                     </li>

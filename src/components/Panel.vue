@@ -1,7 +1,7 @@
 <template>
-    <div class="absolute top-4 left-20 w-140 max-h-100 p-6 rounded-lg bg-neutral-800">
-        <div class="mb-4 flex justify-between gap-x-6">
-            <div class="flex items-center gap-x-3 text-2xl font-bold">
+    <div class="absolute top-4 left-20 w-140 max-h-[calc(100vh-(var(--spacing))*4*2)] pt-0 rounded-lg bg-neutral-800 overflow-y-auto">
+        <div class="sticky top-0 pl-6 pr-6 pt-3 pb-3 z-2 border-b border-neutral-700 bg-neutral-800 flex justify-between gap-x-6">
+            <div class="pointer-events-none flex items-center gap-x-3 text-2xl font-bold">
                 <component :is="icon" class="inline-block" />
                 {{ title }}
             </div>
@@ -14,7 +14,9 @@
             </button>
         </div>
 
-        <slot></slot>
+        <div class="p-6">
+            <slot></slot>
+        </div>
     </div>
 </template>
 
