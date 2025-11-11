@@ -76,9 +76,9 @@
                 <button :class="{ 'bg-orange-500': !isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = false">File View</button>
             </div>-->
 
-            <Canvas v-if="isCanvasView" :fileTree />
+            <Canvas :fileTree />
 
-            <FileContents v-else :filePath="selectedFilePath" />
+            <!--<FileContents v-else :filePath="selectedFilePath" />-->
 
             <Panel
                 v-if="activePopover === 'fileTree'"
@@ -87,18 +87,7 @@
                 panelId="fileTree"
                 @close-panel="closePanel"
             >
-                <input type="search" class="p-1 rounded-sm mb-5 w-full border border-neutral-500" placeholder="Find" />
-
-                <ul>
-                    <li v-for="file in fileTree.children">
-                        <FileTree
-                            :isOpen="true"
-                            :file
-                            class="min-w-xs border-none pt-0!"
-                            @file-selected="updateSelectedFilePath"
-                        />
-                    </li>
-                </ul>
+                <FileExplorer :fileTree />
             </Panel>
 
             <Panel
@@ -108,9 +97,7 @@
                 panelId="chatbot"
                 @close-panel="closePanel"
             >
-                <Chatbot
-                    :currentTargetIssue
-                />
+                <Chatbot :currentTargetIssue />
             </Panel>
 
             <Panel
@@ -145,6 +132,7 @@
     import { Home, CircleDot, Folder, BotMessageSquare, CircleQuestionMark, Settings } from "lucide-vue-next"
     import Chatbot from "./components/Chatbot.vue"
     import Panel from "./components/Panel.vue"
+    import FileExplorer from "./components/FileExplorer.vue"
 
     const isLoading = ref(false)
     const error = ref(null)
@@ -220,10 +208,6 @@
         } finally {
             isLoading.value = false
         }
-    }
-
-    const updateSelectedFilePath  = (filePath) => {
-        selectedFilePath.value = filePath
     }
 
     onMounted(() => {
