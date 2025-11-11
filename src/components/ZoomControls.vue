@@ -1,12 +1,29 @@
 <template>
-    <div class="absolute right-6 top-6 bg-neutral-500 rounded-md border border-neutral-500 flex gap-x-[1px] h-8">
-        <button class="cursor-pointer w-8 flex items-center justify-center bg-neutral-800 hover:bg-neutral-700 rounded-l-md" @click="$emit('zoom-out', 0.25, $event)">
+    <div
+        class="absolute right-4 top-4 p-1 bg-neutral-800 rounded-md flex
+               gap-x-[1px]"
+    >
+        <button
+            class="cursor-pointer w-8 h-8 flex items-center justify-center
+                   hover:bg-neutral-700 rounded-sm active:bg-neutral-600"
+            @click="$emit('zoom-out', 0.25, $event)"
+        >
             <Minus class="w-full" />
         </button>
 
-        <span class="cursor-pointer flex justify-center items-center cursor-default w-14 text-center bg-neutral-800 hover:bg-neutral-700">{{ zoomPercentage }}%</span>
+        <span class="cursor-pointer rounded-sm flex justify-center items-center
+                     cursor-default w-14 text-center hover:bg-neutral-700
+                     active:bg-neutral-600"
+        >
+            {{ zoomPercentage }}%
+        </span>
 
-        <button class="cursor-pointer w-8 flex items-center jusitfy-center bg-neutral-800 hover:bg-neutral-700 rounded-r-md" @click="$emit('zoom-in', 0.25, $event)">
+        <button
+            class="cursor-pointer w-8 h-8 flex items-center justify-center
+                   bg-neutral-800 hover:bg-neutral-700 rounded-sm
+                   active:bg-neutral-600"
+            @click="$emit('zoom-in', 0.25, $event)"
+        >
             <Plus class="w-full" />
         </button>
     </div>
