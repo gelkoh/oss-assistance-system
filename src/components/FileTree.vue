@@ -32,7 +32,7 @@
             <!-- Vertical line underneath directories -->
             <div
                 :style="{ left: `${24 * (file.depth) + 8}px` }"
-                class="absolute pointer-events-none w-px h-[calc(100%-20px)] top-1 bg-neutral-600 z-1">
+                class="absolute pointer-events-none w-px h-[calc(100%-16px)] top-0 bg-neutral-600 z-1">
             </div>
 
             <li v-for="childFile in file.children" :key="childFile.path" class="relative">
