@@ -1,7 +1,7 @@
 <template>
     <div
         group
-        v-if="file.type === 'directory'"
+        v-if="file.type === 'directory' && (searchQuery.length === 0 || file.fitsSearchQuery)"
         class="relative"
     >
         <!-- Horizontal line before directories -->
@@ -36,12 +36,16 @@
             </div>
 
             <li v-for="childFile in file.children" :key="childFile.path" class="relative">
-                <FileTree :file="childFile" @file-selected="$emit('file-selected', $event)" />
+                <FileTree
+                    :searchQuery="searchQuery"
+                    :file="childFile"
+                    @file-selected="$emit('file-selected', $event)" 
+                />
             </li>
         </ul>
     </div>
 
-    <div v-else class="relative">
+    <div v-else class="relative" v-if="searchQuery.length === 0 || file.fitsSearchQuery">
         <!-- Horizontal line before files -->
         <div
             :style="{ left: `${24 * (file.depth) - 16}px` }"
@@ -55,35 +59,44 @@
         >
             <div class="flex items-center">
                 <i v-if="iconClass.length > 0" :class="iconClass" />
-                <FileQuestionMark v-else :size="20" class="inline-block" />
-                <div class="inline-block ml-2">{{ file.name }}</div>
+                <File v-else :size="20" class="inline-block" />
+
+                <div v-if="!searchQuery" class="inline-block ml-2">{{ file.name }}</div>
+
+                <div v-else class="inline-block ml-2">
+                    {{ filenameParts.before }}<span class="bg-orange-500/75 font-bold">{{ filenameParts.at.toUpperCase() }}</span>{{ filenameParts.after }}
+                </div>
             </div>
 
             <SquarePen :size="16" class="inline-block" @click="openFileInEditor(file.path)" />
         </div>
-
-        <ul v-if="isOpen">
-            <li v-for="childFile in file.children" :key="childFile.path">
-                <FileTree :file="childFile" @file-selected="$emit('file-selected', $event)" />
-            </li>
-        </ul>
     </div>
 </template>
 
 <script setup>
-    import { ref, onMounted } from "vue"
-    import { Folder, FolderOpen, FileQuestionMark, SquarePen, ChevronDown, ChevronRight } from 'lucide-vue-next'
+    import { ref, onMounted, watch, computed } from "vue"
+    import { Folder, FolderOpen, File, SquarePen, ChevronDown, ChevronRight } from 'lucide-vue-next'
     import { useFileIcons } from "../composables/useFileIcons.js"
 
     const { getIconClass } = useFileIcons()
 
     const props = defineProps({
         file: Object,
-        isOpen: Boolean
+        isOpen: Boolean,
+        searchQuery: String
     })
 
-    const isOpen = ref(false)
+    const originalIsOpen = ref(props.isOpen || false)
+
+    const isOpen = ref(props.isOpen || false)
+
+    const emit = defineEmits(["file-selected"])
+
     const iconClass = ref("")
+
+    const charsBeforeMatch = ref("")
+    const charsAtMatch = ref("")
+    const charsAfterMatch = ref("")
 
     onMounted(() => {
         if (props.isOpen) isOpen.value = true
@@ -101,6 +114,7 @@
 
     const toggleOpen = () => {
         isOpen.value = !isOpen.value
+        originalIsOpen.value = isOpen.value
     }
 
     const openFileInEditor = (path) => {
@@ -108,4 +122,37 @@
         console.log(`Trying to open the file with path: ${path} in the default text editor`)
         console.log(typeof path)
     }
+
+    const filenameParts = computed(() => {
+        const newQuery = props.searchQuery || ""
+        const name = props.file.name
+
+        if (!newQuery.length) {
+            return { before: name, at: "", after: "" }
+        }
+
+        const lowerName = name.toLowerCase()
+        const lowerQuery = newQuery.toLowerCase()
+        const index = lowerName.indexOf(lowerQuery)
+
+        if (index === -1) {
+            return { before: name, at: "", after: "" }
+        }
+
+        return {
+            before: name.slice(0, index),
+            at: name.slice(index, index + newQuery.length),
+            after: name.slice(index + newQuery.length)
+        }
+    })
+
+    watch(() => props.searchQuery, (newQuery) => {
+        const queryActive = newQuery && newQuery.length > 0
+
+        if (queryActive) {
+            isOpen.value = true
+        } else {
+            isOpen.value = originalIsOpen.value
+        }
+    })
 </script>
