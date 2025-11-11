@@ -22,3 +22,7 @@ html {
     color: white;
     background: black;
 }
+
+body {
+    scrollbar-color: var(--color-neutral-500) var(--color-neutral-800);
+}
