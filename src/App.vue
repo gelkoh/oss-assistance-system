@@ -113,7 +113,6 @@
                     :ownerName
                     :repoName
                     @load-repo-issues="loadRepoIssues"
-                    @target-issue="targetIssue" 
                 />
             </Panel>
         </div>
@@ -134,6 +133,9 @@
     import Chatbot from "./components/Chatbot.vue"
     import Panel from "./components/Panel.vue"
     import FileExplorer from "./components/FileExplorer.vue"
+    import { useRepoStateStore } from "./stores/repoState.js"
+
+    const repoStore = useRepoStateStore()
 
     const isLoading = ref(false)
     const error = ref(null)
@@ -186,6 +188,8 @@
             console.log("Repo info", repoInfo)
 
             isHomeView.value = false
+
+            await repoStore.loadRepoState(path)
 
             if (repoInfo && repoInfo.ownerName && repoInfo.repoName) {
                 console.log("Inside readRepoContents: repoInfo.ownerName: " + repoInfo.ownerName + ", repoInfo.repoName: " + repoInfo.repoName)
@@ -284,21 +288,6 @@
     const toggleIssues = () => togglePopover("issues")
     const toggleHelp = () => togglePopover("help")
     const toggleSettings = () => togglePopover("settings")
-
-    const targetIssue = (targetedIssue) => {
-        console.log(targetedIssue)
-        issues.value.forEach(issue => {
-            issue["is_targeted"] = false
-        })
-
-        issues.value.find(issue => {
-            if (issue.id === targetedIssue.id) {
-                issue["is_targeted"] = true
-                currentTargetIssue.value = issue
-                return true
-            }
-        })
-    }
 
     const closePanel = (panelId) => {
         togglePopover(panelId)

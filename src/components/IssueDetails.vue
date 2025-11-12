@@ -10,8 +10,8 @@
                 <div>#{{ selectedIssue.number }} by {{ selectedIssue.user.login }}</div>
             </div>
 
-            <button @click="$emit('target-issue', selectedIssue)" class="self-start mr-2 cursor-pointer ml-auto">
-                <Target v-if="selectedIssue.is_targeted" />
+            <button @click="repoStore.targetIssue(selectedIssue.id)" class="self-start mr-2 cursor-pointer ml-auto">
+                <Target v-if="isCurrentlyTargeted" />
                 <Circle v-else class="text-neutral-500" />
             </button>
         </div>
@@ -44,10 +44,18 @@
 </template>
 
 <script setup>
+    import { computed } from "vue"
     import { ArrowLeft, Target, Circle } from "lucide-vue-next"
+    import { useRepoStateStore } from "../stores/repoState.js"
+
+    const repoStore = useRepoStateStore()
 
     const props = defineProps({
         selectedIssue: Object,
         parsedIssueBody: Object
+    })
+
+    const isCurrentlyTargeted = computed(() => {
+        return props.selectedIssue.id === repoStore.targetedIssueId
     })
 </script>

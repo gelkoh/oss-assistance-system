@@ -1,7 +1,7 @@
 <template>
     <div
         class="mt-4 px-3 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-sm group"
-        :class="{ 'bg-white text-black hover:bg-neutral-100!' : issue.is_targeted }"
+        :class="{ 'bg-white text-black hover:bg-neutral-100!' : isCurrentlyTargeted }"
     >
         <div class="flex gap-x-4 justify-between">
             <div>
@@ -17,8 +17,8 @@
                 </div>
             </div>
 
-            <button @click="$emit('target-issue', issue)" class="cursor-pointer">
-                <Target v-if="issue.is_targeted" />
+            <button @click="repoStore.targetIssue(issue.id)" class="cursor-pointer">
+                <Target v-if="isCurrentlyTargeted" />
                 <Circle v-else class="opacity-0 group-hover:opacity-100 text-neutral-500" />
             </button>
         </div>
@@ -28,12 +28,20 @@
 </template>
 
 <script setup>
+    import { computed } from "vue"
+    import { useRepoStateStore } from  "../stores/repoState.js"
     import { Dot, Target, Circle } from "lucide-vue-next"
 
-    defineProps({
+    const repoStore = useRepoStateStore()
+
+    const props = defineProps({
         issue: {
             type: Object,
             required: true
         }
+    })
+
+    const isCurrentlyTargeted = computed(() => {
+        return props.issue.id === repoStore.targetedIssueId
     })
 </script>

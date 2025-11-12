@@ -383,6 +383,15 @@ function createWindow() {
             throw new Error(`Chatbot error: ${err.message}`)
         }
     })
+
+    ipcMain.handle("loadRepoState", async (event, repoPath) => {
+        const state = await settings.get(`repo-state.${repoPath}`)
+        return state || {}
+    })
+
+    ipcMain.handle("saveRepoState", async (event, repoPath, state) => {
+        await settings.set(`repo-state.${repoPath}`, state)
+    })
 }
 
 app.whenReady().then(() => {
