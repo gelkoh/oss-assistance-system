@@ -1,7 +1,21 @@
 <template>
-    <div class="mt-2 p-1 bg-neutral-700 rounded-sm group">
+    <div
+        class="mt-4 px-3 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-sm group"
+        :class="{ 'bg-white text-black hover:bg-neutral-100!' : issue.is_targeted }"
+    >
         <div class="flex gap-x-4 justify-between">
-            <div @click="$emit('view-issue', issue)" class="text-blue-500 text-lg cursor-pointer inline-block">{{ issue.title }}</div>
+            <div>
+                <div
+                    @click="$emit('view-issue', issue)"
+                    class="hover:underline font-bold text-lg cursor-pointer inline-block"
+                >
+                    {{ issue.title }}
+                </div>
+
+                <div v-for="label in issue.labels" class="ml-3 px-3 py-1 inline-block rounded-full text-xs" :style="{ 'color': '#' + label.color, 'background': '#' + label.color + '30', 'border': '1px solid #' + label.color }">
+                    {{ label.name }}
+                </div>
+            </div>
 
             <button @click="$emit('target-issue', issue)" class="cursor-pointer">
                 <Target v-if="issue.is_targeted" />
@@ -9,12 +23,12 @@
             </button>
         </div>
 
-        <div>#{{ issue.number }} by {{ issue.user.login }}</div>
+        <div>#{{ issue.number }}<Dot class="inline" />{{ issue.user.login }} opened on {{ issue.created_at.slice(0, 10) }}</div>
     </div>
 </template>
 
 <script setup>
-    import { Target, Circle } from "lucide-vue-next"
+    import { Dot, Target, Circle } from "lucide-vue-next"
 
     defineProps({
         issue: {

@@ -106,6 +106,7 @@
                 title="Issues"
                 panelId="issues"
                 @close-panel="closePanel"
+                width="w-240"
             >
                 <Issues
                     :issues
@@ -285,6 +286,7 @@
     const toggleSettings = () => togglePopover("settings")
 
     const targetIssue = (targetedIssue) => {
+        console.log(targetedIssue)
         issues.value.forEach(issue => {
             issue["is_targeted"] = false
         })

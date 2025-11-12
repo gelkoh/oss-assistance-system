@@ -1,24 +1,50 @@
 <template>
-    <button @click="$emit('go-back-to-issues-list')" class="sticky top-0 left-0 bg-neutral-700 rounded-sm p-1 flex items-center gap-1 hover:bg-neutral-600">
-        <ArrowLeft :size="18" class="inline-block" /> Back
-    </button>
+    <div>
+        <div class="flex items-center gap-x-4 mb-4">
+            <button @click="$emit('go-back-to-issues-list')" class="w-11 h-11 flex items-center justify-center cursor-pointer rounded-sm p-1 flex items-center gap-1 hover:bg-neutral-700 border border-neutral-500 active:bg-neutral-600">
+                <ArrowLeft :size="18" class="inline-block" />
+            </button>
 
-    <div class="text-lg mt-4">{{ selectedIssue.title }}</div>
-    <div>#{{ selectedIssue.number }} by {{ selectedIssue.user.login }}</div>
-
-    <div class="overflow-y-auto">
-        <div v-for="entry in parsedIssueBody" class="mt-4">
-            <div v-if="entry.type === 'text'">
-                {{ entry.content }}
+            <div>
+                <div class="font-bold text-xl">{{ selectedIssue.title }}</div>
+                <div>#{{ selectedIssue.number }} by {{ selectedIssue.user.login }}</div>
             </div>
 
-            <highlightjs v-else autodetect :code="entry.content" class="whitespace-pre-wrap rounded-sm overflow-hidden" />
+            <button @click="$emit('target-issue', selectedIssue)" class="self-start mr-2 cursor-pointer ml-auto">
+                <Target v-if="selectedIssue.is_targeted" />
+                <Circle v-else class="text-neutral-500" />
+            </button>
+        </div>
+
+        <div class="overflow-y-auto">
+            <template v-for="(part, index) in parsedIssueBody" :key="index">
+                <div v-if="part.type === 'paragraph'" class="mt-4 first:mt-0">
+                    <template v-for="(subPart, subIndex) in part.content" :key="subIndex">
+                        <span v-if="subPart.type === 'text'" class="whitespace-pre-wrap">{{ subPart.content }}</span>
+
+                        <code
+                            v-else-if="subPart.type === 'inline-code'"
+                            class="px-1.5 py-0.5 bg-neutral-950 rounded text-sm font-mono"
+                        >
+                            {{ subPart.content }}
+                        </code>
+
+                    </template>
+                </div>
+
+                <highlightjs
+                    v-else
+                    autodetect
+                    :code="part.content"
+                    class="mt-4 whitespace-pre-wrap rounded-sm overflow-hidden *:bg-neutral-950!"
+                />
+            </template>
         </div>
     </div>
 </template>
 
 <script setup>
-    import { ArrowLeft } from "lucide-vue-next"
+    import { ArrowLeft, Target, Circle } from "lucide-vue-next"
 
     const props = defineProps({
         selectedIssue: Object,
