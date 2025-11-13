@@ -11,6 +11,8 @@ export const useRepoStateStore = defineStore('repoState', () => {
 
     const chatbotHistory = ref([])
 
+    const searchQuery = ref("")
+
     const currentTargetIssue = computed(() => {
         if (!targetedIssueId.value) return {}
         return issues.value.find(i => i.id === targetedIssueId.value) || {}
@@ -75,6 +77,14 @@ export const useRepoStateStore = defineStore('repoState', () => {
         await saveRepoState({ fileExplorerState: fileExplorerState.value })
     }
 
+    function setSearchQuery(query) {
+        searchQuery.value = query
+    }
+
+    const currentSearchQuery = computed(() => {
+        return searchQuery.value
+    })
+
     return {
         repoPath,
         issues,
@@ -83,6 +93,9 @@ export const useRepoStateStore = defineStore('repoState', () => {
         chatbotHistory,
 
         currentTargetIssue,
+
+        setSearchQuery,
+        currentSearchQuery,
 
         loadRepoState,
         saveRepoState,

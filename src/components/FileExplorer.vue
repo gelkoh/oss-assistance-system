@@ -24,7 +24,21 @@
 
 <script setup>
     import FileTree from "../components/FileTree.vue"
-    import { ref, onMounted } from "vue"
+    import { ref, onMounted, onBeforeUnmount } from "vue"
+    import { useRepoStateStore } from "../stores/repoState.js"
+
+    const repoStore = useRepoStateStore()
+
+    onMounted(() => {
+        if (repoStore.currentSearchQuery != "") {
+            searchQuery.value = repoStore.currentSearchQuery
+            search()
+        }
+    })
+
+    onBeforeUnmount(() => {
+        repoStore.setSearchQuery(searchQuery.value)
+    })
 
     const props = defineProps({
         fileTree: Object
