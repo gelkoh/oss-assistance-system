@@ -55,7 +55,7 @@
         <div
             @click="$emit('file-selected', file.path)"
             :style="{ paddingLeft: `${24 * (file.depth) + 20}px` }"
-            class="flex px-2 py-1 rounded-sm justify-between items-center hover:bg-neutral-700 cursor-pointer pr-4"
+            class="group flex px-2 py-1 rounded-sm justify-between items-center hover:bg-neutral-700 cursor-pointer pr-1"
         >
             <div class="flex items-center">
                 <i v-if="iconClass.length > 0" :class="iconClass" />
@@ -68,7 +68,14 @@
                 </div>
             </div>
 
-            <SquarePen :size="16" class="inline-block" @click="openFileInEditor(file.path)" />
+            <div
+                class="w-[24px] h-[24px] flex items-center justify-center invisible group-hover:visible hover:bg-neutral-500 rounded-sm"
+                @click="openFileInEditor(file.path)"
+            >
+                <SquarePen
+                    :size="16"
+                />
+            </div>
         </div>
     </div>
 </template>
