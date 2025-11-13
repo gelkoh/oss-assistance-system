@@ -86,6 +86,10 @@
 
     const parsedChatbotMessage = ref("")
 
+    onMounted(() => {
+        chatHistory.value = repoStore.currentChatbotHistory
+    })
+
     const sendMessage = async (event) => {
         if (event.shiftKey) {
             event.preventDefault()
@@ -135,6 +139,8 @@
             )
 
             chatHistory.value[chatHistory.value.length - 1].text = botResponse
+
+            repoStore.setHistory(chatHistory.value)
         } catch(err) {
             error.value = err.message
 

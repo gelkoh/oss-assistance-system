@@ -18,6 +18,10 @@ export const useRepoStateStore = defineStore('repoState', () => {
         return issues.value.find(i => i.id === targetedIssueId.value) || {}
     })
 
+    const currentChatbotHistory = computed(() => {
+        return chatbotHistory.value
+    })
+
     async function loadRepoState(path) {
         if (!window.api) {
             console.error("API is not available.")
@@ -85,6 +89,14 @@ export const useRepoStateStore = defineStore('repoState', () => {
         return searchQuery.value
     })
 
+    async function setHistory(history) {
+        chatbotHistory.value = history
+
+        console.log("NEW HISTORY:", chatbotHistory.value)
+
+        await saveRepoState({ chatbotHistory: chatbotHistory.value })
+    }
+
     return {
         repoPath,
         issues,
@@ -96,6 +108,9 @@ export const useRepoStateStore = defineStore('repoState', () => {
 
         setSearchQuery,
         currentSearchQuery,
+
+        setHistory,
+        currentChatbotHistory,
 
         loadRepoState,
         saveRepoState,
