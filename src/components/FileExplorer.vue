@@ -9,7 +9,7 @@
         />
 
         <ul class="overflow-y-auto grow">
-            <li v-for="file in fileTree.children">
+            <li v-for="file in repoStore.currentFileTree.children">
                 <FileTree
                     :searchQuery="searchQuery.trim()"
                     :file="file"
@@ -38,10 +38,6 @@
 
     onBeforeUnmount(() => {
         repoStore.setSearchQuery(searchQuery.value)
-    })
-
-    const props = defineProps({
-        fileTree: Object
     })
 
     const isRootDirectoryOpen = ref(true)
@@ -88,6 +84,6 @@
 
     const search = () => {
         anyMatch.value = false
-        searchNode(props.fileTree.children[0])
+        searchNode(repoStore.currentFileTree.children[0])
     }
 </script>

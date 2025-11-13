@@ -87,7 +87,7 @@
                 panelId="fileTree"
                 @close-panel="closePanel"
             >
-                <FileExplorer :fileTree />
+                <FileExplorer />
             </Panel>
 
             <Panel
@@ -191,16 +191,16 @@
             const { fileTree: tree, repoInfo } = await window.api.readDirectoryContents(path)
 
             fileTree.value = tree
-            console.log("Filetree:", fileTree.value)
-
-            console.log("Repo info", repoInfo)
 
             isHomeView.value = false
 
+            // Here all repo state gets loaded -- important
             await repoStore.loadRepoState(path)
 
+            // Set file tree in store (not persistently)
+            await repoStore.setFileTree(tree)
+
             if (repoInfo && repoInfo.ownerName && repoInfo.repoName) {
-                console.log("Inside readRepoContents: repoInfo.ownerName: " + repoInfo.ownerName + ", repoInfo.repoName: " + repoInfo.repoName)
                 ownerName.value = repoInfo.ownerName
                 repoName.value = repoInfo.repoName
 

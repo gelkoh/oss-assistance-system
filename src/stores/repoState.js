@@ -4,6 +4,7 @@ import { ref, computed, toRaw } from 'vue'
 export const useRepoStateStore = defineStore('repoState', () => {
     const repoPath = ref("")
 
+    const fileTree = ref(null)
     const issues = ref([])
     const targetedIssueId = ref(null)
 
@@ -20,6 +21,10 @@ export const useRepoStateStore = defineStore('repoState', () => {
 
     const currentChatbotHistory = computed(() => {
         return chatbotHistory.value
+    })
+
+    const currentFileTree = computed(() => {
+        return fileTree.value
     })
 
     async function loadRepoState(path) {
@@ -55,6 +60,15 @@ export const useRepoStateStore = defineStore('repoState', () => {
         const finalData = JSON.parse(JSON.stringify(stateWithProxies))
 
         await window.api.saveRepoState(repoPath.value, finalData)
+    }
+
+    async function setFileTree(treeData) {
+        console.log("Setting file tree to: ")
+        console.log(fileTree)
+        console.log("in store")
+        fileTree.value = treeData
+
+        console.log(currentFileTree)
     }
 
     async function targetIssue(issueId) {
@@ -103,6 +117,8 @@ export const useRepoStateStore = defineStore('repoState', () => {
 
     return {
         repoPath,
+        setFileTree,
+        currentFileTree,
         issues,
         targetedIssueId,
         fileExplorerState,
