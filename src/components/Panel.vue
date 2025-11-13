@@ -9,12 +9,16 @@
                 {{ title }}
             </div>
 
-            <button
-                @click="$emit('close-panel', panelId)"
-                class="w-11 h-11 flex justify-center items-center rounded-md cursor-pointer hover:bg-neutral-700"
-            >
-                <X />
-            </button>
+            <div class="flex gap-x-6">
+                <slot name="panelHeader" />
+
+                <button
+                    @click="$emit('close-panel', panelId)"
+                    class="w-11 h-11 flex justify-center items-center rounded-md cursor-pointer hover:bg-neutral-700"
+                >
+                    <X />
+                </button>
+            </div>
         </div>
 
         <div class="p-6 flex flex-col grow overflow-hidden">

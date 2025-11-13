@@ -92,7 +92,11 @@ export const useRepoStateStore = defineStore('repoState', () => {
     async function setHistory(history) {
         chatbotHistory.value = history
 
-        console.log("NEW HISTORY:", chatbotHistory.value)
+        await saveRepoState({ chatbotHistory: chatbotHistory.value })
+    }
+
+    async function clearHistory() {
+        chatbotHistory.value = []
 
         await saveRepoState({ chatbotHistory: chatbotHistory.value })
     }
@@ -111,6 +115,7 @@ export const useRepoStateStore = defineStore('repoState', () => {
 
         setHistory,
         currentChatbotHistory,
+        clearHistory,
 
         loadRepoState,
         saveRepoState,

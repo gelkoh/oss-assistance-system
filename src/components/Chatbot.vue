@@ -3,13 +3,13 @@
         class="flex flex-col relative min-h-120 h-full overflow-hidden"
     >
         <div class="overflow-y-auto grow pb-10">
-            <div v-if="chatHistory.length === 0" class="mx-20 text-center text-xl font-bold">
+            <div v-if="repoStore.currentChatbotHistory.length === 0" class="mx-20 text-center text-xl font-bold">
                 Hello, how can I help you? <br />
                 If this project is a GitHub repository, go over to the issues tab
                 and target an issue to give me more context.
             </div>
 
-            <div v-for="(message, index) in chatHistory" :key="index" class="flex flex-col">
+            <div v-for="(message, index) in repoStore.currentChatbotHistory" :key="index" class="flex flex-col">
                 <div v-if="message.sender === 'assistant'">
                     <template v-for="(part, index) in useMarkdownParser(message.text)" :key="index">
                         <div v-if="part.type === 'paragraph'" class="mt-4">
@@ -41,35 +41,6 @@
 
             <p v-if="error" class="text-red-500">{{ error }}</p>
         </div>
-
-        <!--<div
-            class="sticky bottom-0 z-1 w-full bottom-0 border border-neutral-500 bg-neutral-700 pt-3 px-4 pb-11 rounded-md"
-        >
-            <div class="before:w-full before:h-20 before:absolute before:left-0 before:top-0
-                   before:bg-linear-to-t before:from-neutral-800/100 before:to-neutral-800/0 before:pointer-events-none before:-z-1"></div>
-
-            <textarea
-                ref="textInput"
-                v-model="currentMessage"
-                @keyup="handleTextInputHeight"
-                @keyup.enter="sendMessage"
-                :disabled="isProcessing"
-                placeholder="Enter a message"
-                class="transition-[height] focus:outline-none resize-none w-full h-full min-h-[24px]"
-                rows="1"
-            />
-
-            <div ref="textInputCopy" class="absolute invisible pointer-events-none">
-
-            </div>
-
-            <button
-                @click="sendMessage"
-                class="cursor-pointer absolute bottom-2 right-2 bg-neutral-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-neutral-500"
-            >
-                <SendHorizontal />
-            </button>
-        </div>-->
 
         <div
             class="sticky bottom-0 z-1 w-full bottom-0"
@@ -112,7 +83,8 @@
 
     const repoStore = useRepoStateStore()
 
-    const chatHistory = ref([])
+    const chatHistory = repoStore.currentChatbotHistory
+
     const currentMessage = ref("")
     const isProcessing = ref(false)
     const modelName = "codellama"
@@ -121,10 +93,6 @@
     const textInputCopy = ref(null)
 
     const parsedChatbotMessage = ref("")
-
-    onMounted(() => {
-        chatHistory.value = repoStore.currentChatbotHistory
-    })
 
     const sendMessage = async (event) => {
         if (event.shiftKey) {
@@ -136,14 +104,14 @@
 
         const userPrompt = currentMessage.value.trim()
         console.log("User prompt: ", userPrompt)
-        chatHistory.value.push({ sender: "user", text: userPrompt })
+        repoStore.currentChatbotHistory.push({ sender: "user", text: userPrompt })
         currentMessage.value = ""
         isProcessing.value = true
         error.value = null
 
-        chatHistory.value.push({ sender: "assistant", text: "..." })
+        repoStore.currentChatbotHistory.push({ sender: "assistant", text: "..." })
 
-        const rawChatHistory = JSON.parse(JSON.stringify(chatHistory.value))
+        const rawChatbotHistory = JSON.parse(JSON.stringify(repoStore.currentChatbotHistory))
 
         const currentTargetIssue = repoStore.currentTargetIssue
         let currentTargetIssueBody
@@ -159,28 +127,28 @@
             content: currentTargetIssueBody
         }
 
-        const chatHistoryArray = rawChatHistory
+        const chatbotHistoryArray = rawChatbotHistory
             .filter(msg => msg.text !== '...')
             .map(msg => ({
                 role: msg.sender === "user" ? "user" : "assistant",
                 content: msg.text
             }))
 
-        chatHistoryArray.unshift(issueMessage)
+        chatbotHistoryArray.unshift(issueMessage)
 
         try {
             const botResponse = await window.api.sendChatbotMessage(
                 modelName,
-                chatHistoryArray
+                chatbotHistoryArray
             )
 
-            chatHistory.value[chatHistory.value.length - 1].text = botResponse
+            repoStore.currentChatbotHistory[repoStore.currentChatbotHistory.length - 1].text = botResponse
 
-            repoStore.setHistory(chatHistory.value)
+            //repoStore.setHistory(chatHistory.value)
         } catch(err) {
             error.value = err.message
 
-            chatHistory.value[chatHistory.value.length - 1].text = `[ERROR] ${err.message}`
+            repoStore.currentChatbotHistory[repoStore.currentChatbotHistory.length - 1].text = `[ERROR] ${err.message}`
         } finally {
             isProcessing.value = false
 
