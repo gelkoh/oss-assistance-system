@@ -11,7 +11,6 @@
         <li v-for="file in fileTree.children">
             <FileTree
                 :searchQuery="searchQuery.trim()"
-                :isOpen="true"
                 :file="file"
                 class="min-w-xs border-none pt-0!"
             />
@@ -23,11 +22,13 @@
 
 <script setup>
     import FileTree from "../components/FileTree.vue"
-    import { ref } from "vue"
+    import { ref, onMounted } from "vue"
 
     const props = defineProps({
         fileTree: Object
     })
+
+    const isRootDirectoryOpen = ref(true)
 
     const searchQuery = ref("")
     const anyMatch = ref(false)

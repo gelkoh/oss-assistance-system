@@ -77,8 +77,10 @@
     import { ref, onMounted, watch, computed } from "vue"
     import { Folder, FolderOpen, File, SquarePen, ChevronDown, ChevronRight } from 'lucide-vue-next'
     import { useFileIcons } from "../composables/useFileIcons.js"
+    import { useRepoStateStore } from "../stores/repoState.js"
 
     const { getIconClass } = useFileIcons()
+    const repoStore = useRepoStateStore()
 
     const props = defineProps({
         file: Object,
@@ -86,9 +88,21 @@
         searchQuery: String
     })
 
-    const originalIsOpen = ref(props.isOpen || false)
+    const isDirectory = props.file.type === "directory" && props.file.path
 
-    const isOpen = ref(props.isOpen || false)
+    let initialOpenState = props.isOpen || false
+
+    if (isDirectory && props.file.depth === 0) {
+        initialOpenState = true
+    }
+
+    if (isDirectory && repoStore.fileExplorerState.hasOwnProperty(props.file.path)) {
+        initialOpenState = repoStore.fileExplorerState[props.file.path]
+    }
+
+    const originalIsOpen = ref(initialOpenState)
+
+    const isOpen = ref(initialOpenState)
 
     const emit = defineEmits(["file-selected"])
 
@@ -115,6 +129,9 @@
     const toggleOpen = () => {
         isOpen.value = !isOpen.value
         originalIsOpen.value = isOpen.value
+
+        console.log("setDirectoryState: " + props.file.path + ", " + isOpen.value)
+        repoStore.setDirectoryState(props.file.path, isOpen.value)
     }
 
     const openFileInEditor = (path) => {
