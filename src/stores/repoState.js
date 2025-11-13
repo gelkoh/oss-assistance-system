@@ -63,12 +63,7 @@ export const useRepoStateStore = defineStore('repoState', () => {
     }
 
     async function setFileTree(treeData) {
-        console.log("Setting file tree to: ")
-        console.log(fileTree)
-        console.log("in store")
         fileTree.value = treeData
-
-        console.log(currentFileTree)
     }
 
     async function targetIssue(issueId) {
@@ -103,7 +98,7 @@ export const useRepoStateStore = defineStore('repoState', () => {
         return searchQuery.value
     })
 
-    async function setHistory(history) {
+    async function saveHistory(history) {
         chatbotHistory.value = history
 
         await saveRepoState({ chatbotHistory: chatbotHistory.value })
@@ -129,7 +124,7 @@ export const useRepoStateStore = defineStore('repoState', () => {
         setSearchQuery,
         currentSearchQuery,
 
-        setHistory,
+        saveHistory,
         currentChatbotHistory,
         clearHistory,
 

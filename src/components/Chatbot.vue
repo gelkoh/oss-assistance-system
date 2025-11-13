@@ -83,8 +83,6 @@
 
     const repoStore = useRepoStateStore()
 
-    const chatHistory = repoStore.currentChatbotHistory
-
     const currentMessage = ref("")
     const isProcessing = ref(false)
     const modelName = "codellama"
@@ -109,7 +107,7 @@
         isProcessing.value = true
         error.value = null
 
-        repoStore.currentChatbotHistory.push({ sender: "assistant", text: "..." })
+        repoStore.currentChatbotHistory.push({ sender: "assistant", text: "...", loading: true })
 
         const rawChatbotHistory = JSON.parse(JSON.stringify(repoStore.currentChatbotHistory))
 
@@ -142,9 +140,10 @@
                 chatbotHistoryArray
             )
 
-            repoStore.currentChatbotHistory[repoStore.currentChatbotHistory.length - 1].text = botResponse
+            const currentChatbotHistory = repoStore.currentChatbotHistory
+            currentChatbotHistory[currentChatbotHistory.length - 1].text = botResponse
 
-            //repoStore.setHistory(chatHistory.value)
+            repoStore.saveHistory(currentChatbotHistory)
         } catch(err) {
             error.value = err.message
 
