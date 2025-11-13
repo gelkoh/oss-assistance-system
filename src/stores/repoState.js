@@ -52,11 +52,19 @@ export const useRepoStateStore = defineStore('repoState', () => {
     }
 
     async function targetIssue(issueId) {
-        targetedIssueId.value = issueId
+        if (issueId === targetedIssueId.value) {
+            targetedIssueId.value = null
 
-        issues.value.forEach(issue => {
-            issue.is_targeted = issue.id === issueId
-        })
+            issues.value.forEach(issue => {
+                issue.is_targeted = false
+            })
+        } else {
+            targetedIssueId.value = issueId
+
+            issues.value.forEach(issue => {
+                issue.is_targeted = issue.id === issueId
+            })
+        }
 
         await saveRepoState()
     }
