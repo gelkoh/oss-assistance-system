@@ -2,7 +2,7 @@
     <div
         class="flex flex-col relative min-h-120 h-full overflow-hidden"
     >
-        <div class="overflow-y-auto grow">
+        <div class="overflow-y-auto grow pb-10">
             <div v-if="chatHistory.length === 0" class="mx-20 text-center text-xl font-bold">
                 Hello, how can I help you? <br />
                 If this project is a GitHub repository, go over to the issues tab
@@ -10,7 +10,7 @@
             </div>
 
             <div v-for="(message, index) in chatHistory" :key="index" class="flex flex-col">
-                <div v-if="message.sender === 'assistant'" class="max-w-[90%]">
+                <div v-if="message.sender === 'assistant'">
                     <template v-for="(part, index) in useMarkdownParser(message.text)" :key="index">
                         <div v-if="part.type === 'paragraph'" class="mt-4">
                             <template v-for="(subPart, subIndex) in part.content" :key="subIndex">
@@ -34,7 +34,7 @@
                     </template>
                 </div>
 
-                <div v-else class="max-w-[90%] mt-4 bg-neutral-700 rounded-md self-end p-3">
+                <div v-else class="mt-4 bg-neutral-700 rounded-md self-end p-3">
                     {{ message.text }}
                 </div>
             </div>
@@ -42,7 +42,12 @@
             <p v-if="error" class="text-red-500">{{ error }}</p>
         </div>
 
-        <div class="absolute w-full bottom-0 border border-neutral-500 bg-neutral-700 pt-3 px-4 pb-11 rounded-md">
+        <!--<div
+            class="sticky bottom-0 z-1 w-full bottom-0 border border-neutral-500 bg-neutral-700 pt-3 px-4 pb-11 rounded-md"
+        >
+            <div class="before:w-full before:h-20 before:absolute before:left-0 before:top-0
+                   before:bg-linear-to-t before:from-neutral-800/100 before:to-neutral-800/0 before:pointer-events-none before:-z-1"></div>
+
             <textarea
                 ref="textInput"
                 v-model="currentMessage"
@@ -50,7 +55,7 @@
                 @keyup.enter="sendMessage"
                 :disabled="isProcessing"
                 placeholder="Enter a message"
-                class="focus:outline-none resize-none w-full h-full min-h-[24px]"
+                class="transition-[height] focus:outline-none resize-none w-full h-full min-h-[24px]"
                 rows="1"
             />
 
@@ -64,6 +69,37 @@
             >
                 <SendHorizontal />
             </button>
+        </div>-->
+
+        <div
+            class="sticky bottom-0 z-1 w-full bottom-0"
+        >
+            <div class="border border-neutral-500 bg-neutral-700 pt-3 px-4 pb-11 rounded-md">
+                <textarea
+                    ref="textInput"
+                    v-model="currentMessage"
+                    @keyup="handleTextInputHeight"
+                    @keyup.enter="sendMessage"
+                    :disabled="isProcessing"
+                    placeholder="Enter a message"
+                    class="transition-[height] focus:outline-none resize-none w-full h-full min-h-[24px]"
+                    rows="1"
+                />
+
+                <div ref="textInputCopy" class="absolute invisible pointer-events-none">
+
+                </div>
+
+                <button
+                    @click="sendMessage"
+                    class="cursor-pointer absolute bottom-2 right-2 bg-neutral-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-neutral-500"
+                >
+                    <SendHorizontal />
+                </button>
+            </div>
+
+            <div class="before:w-full before:h-14 before:absolute before:left-0 before:top-0 before:-translate-y-full
+                        before:bg-linear-to-t before:from-neutral-800/100 before:to-neutral-800/0 before:pointer-events-none before:-z-1"></div>
         </div>
     </div>
 </template>
