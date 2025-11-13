@@ -1,22 +1,24 @@
 <template>
-    <div>
-        <div class="flex items-center gap-x-4 mb-4">
-            <button @click="$emit('go-back-to-issues-list')" class="w-11 h-11 flex items-center justify-center cursor-pointer rounded-sm p-1 flex items-center gap-1 hover:bg-neutral-700 border border-neutral-500 active:bg-neutral-600">
-                <ArrowLeft :size="18" class="inline-block" />
-            </button>
+    <div class="flex flex-col h-full overflow-hidden">
+        <div>
+            <div class="flex items-center gap-x-4 mb-6">
+                <button @click="$emit('go-back-to-issues-list')" class="w-11 h-11 flex items-center justify-center cursor-pointer rounded-sm p-1 flex items-center gap-1 hover:bg-neutral-700 border border-neutral-500 active:bg-neutral-600">
+                    <ArrowLeft :size="18" class="inline-block" />
+                </button>
 
-            <div>
-                <div class="font-bold text-xl">{{ selectedIssue.title }}</div>
-                <div>#{{ selectedIssue.number }} by {{ selectedIssue.user.login }}</div>
+                <div>
+                    <div class="font-bold text-xl">{{ selectedIssue.title }}</div>
+                    <div>#{{ selectedIssue.number }} by {{ selectedIssue.user.login }}</div>
+                </div>
+
+                <button @click="repoStore.targetIssue(selectedIssue.id)" class="self-start mr-2 cursor-pointer ml-auto">
+                    <Target v-if="isCurrentlyTargeted" />
+                    <Circle v-else class="text-neutral-500" />
+                </button>
             </div>
-
-            <button @click="repoStore.targetIssue(selectedIssue.id)" class="self-start mr-2 cursor-pointer ml-auto">
-                <Target v-if="isCurrentlyTargeted" />
-                <Circle v-else class="text-neutral-500" />
-            </button>
         </div>
 
-        <div class="overflow-y-auto">
+        <div class="overflow-y-auto grow">
             <template v-for="(part, index) in parsedIssueBody" :key="index">
                 <div v-if="part.type === 'paragraph'" class="mt-4 first:mt-0">
                     <template v-for="(subPart, subIndex) in part.content" :key="subIndex">

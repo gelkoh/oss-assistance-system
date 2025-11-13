@@ -1,8 +1,8 @@
 <template>
     <div
-        class="flex flex-col relative min-h-120"
+        class="flex flex-col relative min-h-120 h-full overflow-hidden"
     >
-        <div>
+        <div class="overflow-y-auto grow">
             <div v-if="chatHistory.length === 0" class="mx-20 text-center text-xl font-bold">
                 Hello, how can I help you? <br />
                 If this project is a GitHub repository, go over to the issues tab

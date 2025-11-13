@@ -1,23 +1,25 @@
 <template>
-    <input
-        v-model="searchQuery"
-        @keyup="search"
-        type="text"
-        class="bg-neutral-700 px-2 py-1 rounded-sm mb-5 w-full border border-neutral-500" 
-        placeholder="Find"
-    />
+    <div class="flex flex-col h-full overflow-hidden">
+        <input
+            v-model="searchQuery"
+            @keyup="search"
+            type="text"
+            class="bg-neutral-700 px-2 py-1 rounded-sm mb-6 w-full border border-neutral-500" 
+            placeholder="Find"
+        />
 
-    <ul>
-        <li v-for="file in fileTree.children">
-            <FileTree
-                :searchQuery="searchQuery.trim()"
-                :file="file"
-                class="min-w-xs border-none pt-0!"
-            />
-        </li>
-    </ul>
+        <ul class="overflow-y-auto grow">
+            <li v-for="file in fileTree.children">
+                <FileTree
+                    :searchQuery="searchQuery.trim()"
+                    :file="file"
+                    class="min-w-xs border-none pt-0!"
+                />
+            </li>
+        </ul>
 
-    <div v-if="searchQuery.trim().length !== 0 && anyMatch === false">No matching file found...</div>
+        <div v-if="searchQuery.trim().length !== 0 && anyMatch === false">No matching file found...</div>
+    </div>
 </template>
 
 <script setup>
