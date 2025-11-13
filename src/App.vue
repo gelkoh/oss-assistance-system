@@ -96,6 +96,7 @@
                 title="Chatbot"
                 panelId="chatbot"
                 @close-panel="closePanel"
+                width="w-240"
             >
                 <Chatbot :currentTargetIssue />
             </Panel>

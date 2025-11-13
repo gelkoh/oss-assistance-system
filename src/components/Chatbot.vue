@@ -1,23 +1,60 @@
 <template>
-    <div class="flex flex-col h-full">
-        <div class="mt-4 overflow-y-auto">
-            <template v-for="(message, index) in chatHistory" :key="index">
-                <div v-if="message.sender === 'assistant'" class="mt-2">
-                    {{ message.text }}
+    <div class="flex flex-col h-full relative">
+        <div class="mb-34">
+            <div v-if="chatHistory.length === 0" class="mx-20 text-center text-xl font-bold">
+                Hello, how can I help you? <br />
+                If this project is a GitHub repository, go over to the issues tab
+                and target an issue to give me more context.
+            </div>
+
+            <div v-for="(message, index) in chatHistory" :key="index" class="flex flex-col">
+                <div v-if="message.sender === 'assistant'" class="max-w-[90%]">
+                    <template v-for="(part, index) in useMarkdownParser(message.text)" :key="index">
+                        <div v-if="part.type === 'paragraph'" class="mt-4">
+                            <template v-for="(subPart, subIndex) in part.content" :key="subIndex">
+                                <span v-if="subPart.type === 'text'">{{ subPart.content }}</span>
+
+                                <code
+                                    v-else-if="subPart.type === 'inline-code'"
+                                    class="px-1.5 py-0.5 bg-neutral-950 rounded text-sm font-mono"
+                                >
+                                    {{ subPart.content }}
+                                </code>
+                            </template>
+                        </div>
+
+                        <highlightjs
+                            v-else
+                            autodetect
+                            :code="part.content"
+                            class="mt-4 whitespace-pre-wrap rounded-sm overflow-hidden *:bg-neutral-950!"
+                        />
+                    </template>
                 </div>
 
-                <div v-else class="mt-2 bg-neutral-900 p-2 rounded-md">
+                <div v-else class="max-w-[90%] mt-4 bg-neutral-700 rounded-md self-end p-3">
                     {{ message.text }}
                 </div>
-            </template>
+            </div>
 
             <p v-if="error" class="text-red-500">{{ error }}</p>
         </div>
 
-        <div class="relative mt-auto h-24">
-            <textarea v-model="currentMessage" @keyup.enter="sendMessage" :disabled="isProcessing" placeholder="Enter a message" class="bg-neutral-700 p-4 rounded-md resize-none w-full h-full" />
+        <div class="absolute w-full bottom-0 border border-neutral-500 bg-neutral-700 pt-3 px-4 pb-11 rounded-md">
+            <textarea
+                ref="textInput"
+                v-model="currentMessage"
+                @keyup.enter="sendMessage"
+                :disabled="isProcessing"
+                placeholder="Enter a message"
+                class="focus:outline-none resize-none w-full h-full"
+                rows="2"
+            />
 
-            <button @click="sendMessage" class="absolute bottom-2 right-2 bg-blue-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-blue-500">
+            <button
+                @click="sendMessage"
+                class="cursor-pointer absolute bottom-2 right-2 bg-neutral-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-neutral-500"
+            >
                 <SendHorizontal />
             </button>
         </div>
@@ -25,8 +62,9 @@
 </template>
 
 <script setup>
-    import { ref } from "vue"
+    import { ref, onMounted } from "vue"
     import { SendHorizontal } from "lucide-vue-next"
+    import { useMarkdownParser } from "../composables/useMarkdownParser.js"
 
     const props = defineProps({
         currentTargetIssue: Object
@@ -37,8 +75,15 @@
     const isProcessing = ref(false)
     const modelName = "codellama"
     const error = ref(null)
+    const textInput = ref(null)
 
-    const sendMessage = async () => {
+    const parsedChatbotMessage = ref("")
+    const sendMessage = async (event) => {
+        if (event.shiftKey) {
+            event.preventDefault()
+            return
+        }
+
         if (!currentMessage.value.trim()) return
 
         const userPrompt = currentMessage.value.trim()
