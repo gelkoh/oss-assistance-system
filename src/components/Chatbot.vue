@@ -11,7 +11,7 @@
 
             <div v-for="(message, index) in repoStore.currentChatbotHistory" :key="index" class="flex flex-col">
                 <div v-if="message.sender === 'assistant'">
-                    <template v-for="(part, index) in useMarkdownParser(message.text)" :key="index">
+                    <template v-if="message.status === 'success'" v-for="(part, index) in useMarkdownParser(message.text)" :key="index">
                         <div v-if="part.type === 'paragraph'" class="mt-4">
                             <template v-for="(subPart, subIndex) in part.content" :key="subIndex">
                                 <span v-if="subPart.type === 'text'">{{ subPart.content }}</span>
@@ -32,14 +32,14 @@
                             class="mt-4 whitespace-pre-wrap rounded-sm overflow-hidden *:bg-neutral-950!"
                         />
                     </template>
+
+                    <div v-else class="text-bold text-red-500">{{ message.text }}</div>
                 </div>
 
                 <div v-else class="mt-4 bg-neutral-700 rounded-md self-end p-3">
                     {{ message.text }}
                 </div>
             </div>
-
-            <p v-if="error" class="text-red-500">{{ error }}</p>
         </div>
 
         <div
@@ -86,7 +86,6 @@
     const currentMessage = ref("")
     const isProcessing = ref(false)
     const modelName = "codellama"
-    const error = ref(null)
     const textInput = ref(null)
     const textInputCopy = ref(null)
 
@@ -105,9 +104,6 @@
         repoStore.currentChatbotHistory.push({ sender: "user", text: userPrompt })
         currentMessage.value = ""
         isProcessing.value = true
-        error.value = null
-
-        repoStore.currentChatbotHistory.push({ sender: "assistant", text: "...", loading: true })
 
         const rawChatbotHistory = JSON.parse(JSON.stringify(repoStore.currentChatbotHistory))
 
@@ -126,7 +122,6 @@
         }
 
         const chatbotHistoryArray = rawChatbotHistory
-            .filter(msg => msg.text !== '...')
             .map(msg => ({
                 role: msg.sender === "user" ? "user" : "assistant",
                 content: msg.text
@@ -134,25 +129,24 @@
 
         chatbotHistoryArray.unshift(issueMessage)
 
+        const currentChatbotHistory = repoStore.currentChatbotHistory
+
         try {
             const botResponse = await window.api.sendChatbotMessage(
                 modelName,
                 chatbotHistoryArray
             )
 
-            const currentChatbotHistory = repoStore.currentChatbotHistory
-            currentChatbotHistory[currentChatbotHistory.length - 1].text = botResponse
-
-            repoStore.saveHistory(currentChatbotHistory)
+            currentChatbotHistory[currentChatbotHistory.length] = { sender: "assistant", text: botResponse, status: "success" }
         } catch(err) {
-            error.value = err.message
-
-            repoStore.currentChatbotHistory[repoStore.currentChatbotHistory.length - 1].text = `[ERROR] ${err.message}`
+            repoStore.currentChatbotHistory[repoStore.currentChatbotHistory.length] = { sender: "assistant", text: `[ERROR] ${err.message}`, status: "error" }
         } finally {
             isProcessing.value = false
 
             textInputCopy.value.style.height = "24px"
             textInput.value.style.height = "24px"
+
+            repoStore.saveHistory(currentChatbotHistory)
         }
     }
 
