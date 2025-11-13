@@ -1,6 +1,8 @@
 <template>
-    <div class="flex flex-col h-full relative">
-        <div class="mb-34">
+    <div
+        class="flex flex-col relative min-h-120"
+    >
+        <div>
             <div v-if="chatHistory.length === 0" class="mx-20 text-center text-xl font-bold">
                 Hello, how can I help you? <br />
                 If this project is a GitHub repository, go over to the issues tab
@@ -44,12 +46,17 @@
             <textarea
                 ref="textInput"
                 v-model="currentMessage"
+                @keyup="handleTextInputHeight"
                 @keyup.enter="sendMessage"
                 :disabled="isProcessing"
                 placeholder="Enter a message"
-                class="focus:outline-none resize-none w-full h-full"
-                rows="2"
+                class="focus:outline-none resize-none w-full h-full min-h-[24px]"
+                rows="1"
             />
+
+            <div ref="textInputCopy" class="absolute invisible pointer-events-none">
+
+            </div>
 
             <button
                 @click="sendMessage"
@@ -76,8 +83,10 @@
     const modelName = "codellama"
     const error = ref(null)
     const textInput = ref(null)
+    const textInputCopy = ref(null)
 
     const parsedChatbotMessage = ref("")
+
     const sendMessage = async (event) => {
         if (event.shiftKey) {
             event.preventDefault()
@@ -124,6 +133,36 @@
             chatHistory.value[chatHistory.value.length - 1].text = `[ERROR] ${err.message}`
         } finally {
             isProcessing.value = false
+
+            textInputCopy.value.style.height = "24px"
+            textInput.value.style.height = "24px"
+        }
+    }
+
+    const handleTextInputHeight = () => {
+        const MAX_INPUT_HEIGHT = 168
+        const LINE_HEIGHT = 24
+
+        textInputCopy.value.style.width = textInput.value.offsetWidth + "px"
+
+        const firstChild = textInputCopy.value.firstChild
+
+        if (firstChild) {
+            textInputCopy.value.removeChild(firstChild)
+        }
+
+        const textNode = document.createTextNode(textInput.value.value)
+        textInputCopy.value.appendChild(textNode)
+
+        // Count line breaks and add the height to the input
+        const currentText = textInput.value.value
+        const lineBreaks = currentText.split(/\r|\r\n|\n/)
+        const lineBreaksCount = lineBreaks.length - 1
+
+        const extraHeight = lineBreaksCount * LINE_HEIGHT
+
+        if (textInputCopy.value.offsetHeight + extraHeight <= MAX_INPUT_HEIGHT) {
+            textInput.value.style.height = textInputCopy.value.offsetHeight + extraHeight + "px"
         }
     }
 </script>
