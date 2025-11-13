@@ -40,6 +40,8 @@
                     {{ message.text }}
                 </div>
             </div>
+
+            <div v-if="isProcessing" class="mt-4 loader"></div>
         </div>
 
         <div
