@@ -98,7 +98,7 @@
                 @close-panel="closePanel"
                 width="w-240"
             >
-                <Chatbot :currentTargetIssue />
+                <Chatbot />
             </Panel>
 
             <Panel
@@ -165,8 +165,6 @@
     const issuesVisible = ref(false)
 
     const activePopover = ref(null)
-
-    const currentTargetIssue = ref({})
 
     const readRepoContents = async (path) => {
         console.log("readRepoContents path: " + path)

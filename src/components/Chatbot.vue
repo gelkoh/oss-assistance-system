@@ -72,10 +72,9 @@
     import { ref, onMounted } from "vue"
     import { SendHorizontal } from "lucide-vue-next"
     import { useMarkdownParser } from "../composables/useMarkdownParser.js"
+    import { useRepoStateStore } from "../stores/repoState.js"
 
-    const props = defineProps({
-        currentTargetIssue: Object
-    })
+    const repoStore = useRepoStateStore()
 
     const chatHistory = ref([])
     const currentMessage = ref("")
@@ -106,9 +105,18 @@
 
         const rawChatHistory = JSON.parse(JSON.stringify(chatHistory.value))
 
+        const currentTargetIssue = repoStore.currentTargetIssue
+        let currentTargetIssueBody
+
+        if (currentTargetIssue.body) {
+            currentTargetIssueBody = currentTargetIssue.body
+        } else {
+            currentTargetIssueBody = null
+        }
+
         const issueMessage = {
             role: "system",
-            content: props.currentTargetIssue.body
+            content: currentTargetIssueBody
         }
 
         const chatHistoryArray = rawChatHistory
