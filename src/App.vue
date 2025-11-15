@@ -22,14 +22,31 @@
                 v-if="isLoading"
                 class="absolute left-0 top-0 w-full h-full bg-black flex items-center justify-center"
             >
-                <div>
-                    <div class="text-4xl font-bold text-center">Project loading ...</div>
+                <div class="flex flex-col items-center text-xl">
+                    <div class="text-5xl font-bold text-center">Project loading <div class="inline-block loader"></div></div>
 
                     <progress
                         :value="progress"
-                        max="100"
-                        class="block h-2 mt-10 w-100 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-neutral-800 [&::-webkit-progress-value]:bg-white"
+                        max="1"
+                        class="block h-2 mt-10 w-200 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-neutral-800 [&::-webkit-progress-value]:bg-white"
                     />
+
+                    <div class="mt-14">
+                        <div class="flex">
+                            <div class="w-60 font-bold">Currently analysing:</div>
+                            <div class="w-60 whitespace-nowrap">{{ currentFileName }}</div>
+                        </div>
+
+                        <div class="flex mt-6">
+                            <div class="w-60 font-bold">Files analysed:</div>
+                            <div class="w-60">{{ currentFileIndex }}/{{ totalFilesToBeAnalysedCount }}</div>
+                        </div>
+
+                        <div class="flex">
+                            <div class="w-60 font-bold">Chunks analysed:</div>
+                            <div class="w-60">{{ currentChunkIndex }}/{{ totalChunkCount }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -199,6 +216,11 @@
     const activePopover = ref(null)
 
     const progress = ref(0)
+    const currentFileName = ref("")
+    const totalFilesToBeAnalysedCount = ref(0)
+    const currentFileIndex = ref(0)
+    const totalChunkCount = ref(0)
+    const currentChunkIndex = ref(0)
 
     const readRepoContents = async (path) => {
         console.log("readRepoContents path: " + path)
@@ -229,11 +251,20 @@
 
             const modelName = "codellama"
 
-            console.log(analysis.analysisResults)
+            totalFilesToBeAnalysedCount.value = analysis.analysisResults.length
 
-            const analysisProgressStep = 1.0 / analysis.analysisResults.length
+            // Count chunks
+            for (const entry of analysis.analysisResults) {
+                totalChunkCount.value += entry.chunks.length
+            }
+
+            const analysisProgressStep = 1.0 / totalChunkCount.value
+
+            const messagesCollector = []
 
             for (const entry of analysis.analysisResults) {
+                currentFileName.value = entry.filePath.split("/").at(-1)
+
                 for (const chunk of entry.chunks) {
                     const userPromptContent = `
                         Analyze this code chunk from the repository. Focus on its primary function, inputs, and outputs.
@@ -256,9 +287,12 @@
                     )
 
                     console.log(botResponse)
+
+                    currentChunkIndex.value += 1
+                    progress.value += analysisProgressStep
                 }
 
-                progress.value += analysisProgressStep
+                currentFileIndex.value += 1
             }
 
             if (repoInfo && repoInfo.ownerName && repoInfo.repoName) {
