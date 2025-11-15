@@ -200,6 +200,36 @@
             // Set file tree in store (not persistently)
             await repoStore.setFileTree(tree)
 
+            const analysis = await window.api.processRepoFiles(tree.allFilePaths)
+
+            const modelName = "codellama"
+
+            for (const entry of analysis.analysisResults) {
+                for (const chunk of entry.chunks) {
+                    const userPromptContent = `
+                        Analyze this code chunk from the repository. Focus on its primary function, inputs, and outputs.
+
+                        \`\`\`${entry.language}
+                        ${chunk}
+                        \`\`\`
+
+                        Provide a concise, single-paragraph summary.
+                    `.trim()
+
+                    const messages = [{
+                        role: "user",
+                        content: userPromptContent
+                    }]
+
+                    const botResponse = await window.api.analyzeChunk(
+                        modelName,
+                        messages
+                    )
+
+                    console.log(botResponse)
+                }
+            }
+
             if (repoInfo && repoInfo.ownerName && repoInfo.repoName) {
                 ownerName.value = repoInfo.ownerName
                 repoName.value = repoInfo.repoName

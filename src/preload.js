@@ -18,4 +18,7 @@ contextBridge.exposeInMainWorld("api", {
     openTargetDirectoryDialog: (url, localPath) => ipcRenderer.invoke("open-target-directory-dialog"),
     saveRepository: (repoPath) => ipcRenderer.invoke("save-repository", repoPath),
     sendChatbotMessage: (model, chatHistory) => ipcRenderer.invoke("send-chatbot-message", { model, chatHistory }),
+    parseCode: (code) => ipcRenderer.invoke("parse-code", code),
+    processRepoFiles: (filePaths) => ipcRenderer.invoke("process-repo-files", filePaths),
+    analyzeChunk: (model, messages) => ipcRenderer.invoke("analyze-chunk", { model, messages }),
 })

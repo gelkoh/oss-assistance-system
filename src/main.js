@@ -7,6 +7,8 @@ import settings from "electron-settings"
 import { Octokit } from "@octokit/core"
 import { exec } from "child_process"
 import { Ollama } from "ollama"
+import Parser from "tree-sitter"
+import JavaScript from "tree-sitter-javascript"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -15,6 +17,9 @@ let currentRepoInfo = { ownerName: null, repoName: null }
 
 const octokit = new Octokit({})
 const ollama = new Ollama({})
+
+const parser = new Parser()
+parser.setLanguage(JavaScript)
 
 const readFileContents = async (filePath) => {
     try {
@@ -26,7 +31,69 @@ const readFileContents = async (filePath) => {
     }
 }
 
-function buildTree(dirPath, currentDepth) {
+const shouldAnalyzeFile = (fileName) => {
+    // Only analyze JS files for testing
+    return fileName.split(".").at(-1) === "js"
+}
+
+const detectLanguage = (filePath) => {
+    if (filePath.split("/").at(-1)[0] === ".") return "dotfile"
+
+    return filePath.split(".").at(-1)
+}
+
+const getGrammar = (language) => {
+    switch(language) {
+        case "js":
+            return JavaScript
+        default:
+            return null
+    }
+}
+
+const performChunking = (tree, codeContent) => {
+    const chunks = []
+
+    let currentChunk = []
+
+    const lines = codeContent.split("\n")
+    let currentTokenCount = 0
+
+    for (let i = 0; i < tree.rootNode.childCount; i++) {
+        // WENN GANZE FILE WENIGER ALS 1000 TOKENS, DANN PROBLEM
+        if (currentTokenCount > 1000) {
+            const chunkString = currentChunk.join("\n")
+            const sanitizedChunkString = chunkString.replace(/[\t ]+/g, " ")
+            chunks.push(sanitizedChunkString)
+
+            //chunks.push(currentChunk)
+
+            currentChunk = []
+            currentTokenCount = 0
+        }
+
+        const startLine = tree.rootNode.child(i).startPosition.row
+        const endLine = tree.rootNode.child(i).endPosition.row
+
+        for (let j = startLine; j < endLine; j++) {
+            // Count tokens of current top level "code-group/function/whatever"
+            currentTokenCount += lines[j].length
+            currentChunk.push(lines[j])
+            //console.log("LINE " + j + ":" + lines[j])
+        }
+
+        
+        //console.log(tree.rootNode.child(i))
+        //console.log(startLine + ", " + endLine)
+    }
+    //console.log("TREE ROOT NODE: ", tree.rootNode.child(1))
+    //console.log("CODECONTENT: ", codeContent)
+                //const chunks = performChunking(tree, codeContent)
+
+    return chunks
+}
+
+function buildTree(dirPath, currentDepth, allFilePathsCollector) {
     console.log("CALLED BUILD TREE")
     const stats = fs.statSync(dirPath)
     if (!stats.isDirectory()) return []
@@ -101,20 +168,32 @@ function buildTree(dirPath, currentDepth) {
         const fullPath = path.join(dirPath, entry.name)
         const isDir = entry.isDirectory()
 
-        return {
+        const node = {
             name: entry.name,
             path: fullPath,
             type: isDir ? "directory" : "file",
             depth: entryDepth,
-            children: isDir ? buildTree(fullPath, entryDepth) : []
+            children: []
         }
+
+        if (isDir) {
+            node.children = buildTree(fullPath, entryDepth, allFilePathsCollector) || []
+        } else {
+            if (shouldAnalyzeFile(entry.name)) {
+                allFilePathsCollector.push(fullPath)
+            }
+        }
+
+        return node
     })
 }
 
 function buildRepoTreeWrapper(repoPath) {
     const dirName = path.basename(repoPath)
 
-    const children = buildTree(repoPath, 0) || []
+    const allFilePaths = []
+
+    const children = buildTree(repoPath, 0, allFilePaths) || []
     console.log("CHILDREN: ", children)
     console.log("CHILDREN LENGTH: ", children.length)
 
@@ -126,7 +205,8 @@ function buildRepoTreeWrapper(repoPath) {
             type: "directory",
             depth: 0,
             children: children
-        }]
+        }],
+        allFilePaths: allFilePaths
     }
 }
 
@@ -391,6 +471,56 @@ function createWindow() {
 
     ipcMain.handle("saveRepoState", async (event, repoPath, state) => {
         await settings.set(`repo-state.${repoPath}`, state)
+    })
+
+    ipcMain.handle("analyze-chunk", async (event, { model, messages }) => {
+        try {
+            console.log(`Sending prompt to Ollama model ${model}...`)
+
+            const response = await ollama.chat({
+                model: model,
+                messages: messages
+            })
+
+            return response.message.content.trim()
+        } catch(err) {
+            console.error("Error communicating with Ollama: ", err)
+
+            if (err.message && err.message.includes("connect ECONNREFUSED")) {
+                throw new Error("Ollama server not reachable. Please start Ollama.")
+            }
+
+            if (err.message && err.message.includes("pull") || err.message.includes("not found")) {
+                throw new Error(`Model: '${model}' not found. Please run 'ollama pull ${model}'.`)
+            }
+
+            throw new Error(`Code analysis error: ${err.message}`)
+        }
+    })
+
+    ipcMain.handle("process-repo-files", async (event, filePaths) => {
+        const analysisResults = []
+
+        const promises = filePaths.map(async (filePath) => {
+            try {
+                const language = detectLanguage(filePath)
+
+                const codeContent = await fs.promises.readFile(filePath, "utf-8")
+
+                parser.setLanguage(getGrammar(language))
+
+                const tree = parser.parse(codeContent)
+                const chunks = performChunking(tree, codeContent)
+
+                analysisResults.push({ filePath, status: "success", language: language, chunks: chunks })
+            } catch(err) {
+                analysisResults.push({ filePath, status: "error", message: err.message })
+            }
+        })
+
+        await Promise.allSettled(promises)
+
+        return { success: true, analysisResults: analysisResults, processedCount: analysisResults.length }
     })
 }
 
