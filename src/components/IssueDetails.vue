@@ -2,13 +2,13 @@
     <div class="flex flex-col h-full overflow-hidden">
         <div>
             <div class="flex items-center gap-x-4 mb-6">
-                <button @click="$emit('go-back-to-issues-list')" class="w-11 h-11 flex items-center justify-center cursor-pointer rounded-sm p-1 flex items-center gap-1 hover:bg-neutral-700 border border-neutral-500 active:bg-neutral-600">
+                <button @click="closeIssueDetails" class="w-11 h-11 flex items-center justify-center cursor-pointer rounded-sm p-1 flex items-center gap-1 hover:bg-neutral-700 border border-neutral-500 active:bg-neutral-600">
                     <ArrowLeft :size="18" class="inline-block" />
                 </button>
 
                 <div>
-                    <div class="font-bold text-xl">{{ selectedIssue.title }}</div>
-                    <div>#{{ selectedIssue.number }} by {{ selectedIssue.user.login }}</div>
+                    <div class="font-bold text-xl">{{ repoStore.selectedIssue.title }}</div>
+                    <div>#{{ repoStore.selectedIssue.number }} by {{ repoStore.selectedIssue.user.login }}</div>
                 </div>
 
                 <button @click="repoStore.targetIssue(selectedIssue.id)" class="self-start mr-2 cursor-pointer ml-auto">
@@ -30,7 +30,6 @@
                         >
                             {{ subPart.content }}
                         </code>
-
                     </template>
                 </div>
 
@@ -47,17 +46,21 @@
 
 <script setup>
     import { computed } from "vue"
-    import { ArrowLeft, Target, Circle } from "lucide-vue-next"
     import { useRepoStateStore } from "../stores/repoState.js"
+    import { useMarkdownParser } from "../composables/useMarkdownParser.js"
+    import { ArrowLeft, Target, Circle } from "lucide-vue-next"
 
     const repoStore = useRepoStateStore()
 
-    const props = defineProps({
-        selectedIssue: Object,
-        parsedIssueBody: Object
-    })
+    const closeIssueDetails = () => {
+        repoStore.selectedIssue = {}
+    }
 
     const isCurrentlyTargeted = computed(() => {
-        return props.selectedIssue.id === repoStore.targetedIssueId
+        return repoStore.selectedIssue.id === repoStore.targetedIssueId
+    })
+
+    const parsedIssueBody = computed(() => {
+        return useMarkdownParser(repoStore.selectedIssue.body)
     })
 </script>

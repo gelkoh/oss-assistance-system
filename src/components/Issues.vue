@@ -1,5 +1,5 @@
 <template>
-    <div v-if="issuesListVisible" class="flex flex-col h-full overflow-hidden">
+    <div v-if="Object.keys(repoStore.selectedIssue).length === 0" class="flex flex-col h-full overflow-hidden">
         <div class="overflow-y-auto grow">
             <div class="text-lg font-bold">There are {{ issues.length }} open issues. Target an issue to pass it as context to the chatbot.</div>
 
@@ -22,10 +22,7 @@
 
     <IssueDetails
         v-else
-        :selectedIssue
-        :parsedIssueBody
         @target-issue="$emit('target-issue', $event)"
-        @go-back-to-issues-list="handleGoBackToIssuesList"
     />
 </template>
 
@@ -34,11 +31,9 @@
     import { Circle, CircleDot, Target } from "lucide-vue-next"
     import IssueDetails from "../components/IssueDetails.vue"
     import Issue from "../components/Issue.vue"
-    import { useMarkdownParser } from "../composables/useMarkdownParser.js"
+    import { useRepoStateStore } from "../stores/repoState.js"
 
-    const issuesListVisible = ref(true)
-    const selectedIssue = ref({})
-    const parsedIssueBody = ref({})
+    const repoStore = useRepoStateStore()
 
     const props = defineProps({
         issues: Array,
@@ -47,15 +42,11 @@
     })
 
     const viewIssue = (issue) => {
-        selectedIssue.value = issue
-
-        parsedIssueBody.value = useMarkdownParser(selectedIssue.value.body)
-
-        issuesListVisible.value = false
+        repoStore.selectedIssue = issue
     }
 
-    const handleGoBackToIssuesList = () => {
+    /*const handleGoBackToIssuesList = () => {
         issuesListVisible.value = true
         selectedIssue.value = {}
-    }
+    }*/
 </script>

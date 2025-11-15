@@ -204,7 +204,7 @@
 
             const modelName = "codellama"
 
-            for (const entry of analysis.analysisResults) {
+            /*for (const entry of analysis.analysisResults) {
                 for (const chunk of entry.chunks) {
                     const userPromptContent = `
                         Analyze this code chunk from the repository. Focus on its primary function, inputs, and outputs.
@@ -228,7 +228,7 @@
 
                     console.log(botResponse)
                 }
-            }
+            }*/
 
             if (repoInfo && repoInfo.ownerName && repoInfo.repoName) {
                 ownerName.value = repoInfo.ownerName
