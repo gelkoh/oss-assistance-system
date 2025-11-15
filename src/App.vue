@@ -19,11 +19,13 @@
 
         <div v-else>
             <div class="flex p-2 flex-col gap-2 absolute top-0 h-screen left-0 bg-neutral-800">
-                <button @click="isHomeView = true" class="transition cursor-pointer flex items-center justify-center w-11 h-11 bg-neutral-800 rounded-md hover:bg-neutral-700">
-                    <Home />
-                </button>
+                <Tooltip placement="right" text="Home" :offset="17">
+                    <button @click="isHomeView = true" class="transition cursor-pointer flex items-center justify-center w-11 h-11 bg-neutral-800 rounded-md hover:bg-neutral-700">
+                        <Home />
+                    </button>
+                </Tooltip>
 
-                <div class="relative group/button">
+                <Tooltip placement="right" text="File Explorer" :offset="17">
                     <button
                         @click="toggleFileTree"
                         :class="{ 'bg-white! text-black': activePopover === 'fileTree' }"
@@ -31,41 +33,47 @@
                     >
                         <Folder />
                     </button>
+                </Tooltip>
 
-                    <div class="opacity-0 group-hover/button:opacity-1 absolute left-14 top-[50%] -translate-y-[50%] bg-neutral-800 whitespace-nowrap rounded-md px-2 py-1 pointer-events-none">
-                        File Explorer
-                    </div>
+                <Tooltip placement="right" text="Chatbot" :offset="17">
+                    <button
+                        @click="toggleChatbot"
+                        :class="{ 'bg-white! text-black': activePopover === 'chatbot' }"
+                        class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 hover:bg-neutral-700 rounded-md"
+                    >
+                        <BotMessageSquare />
+                    </button>
+                </Tooltip>
+
+                <Tooltip placement="right" text="Issues" :offset="17">
+                    <button
+                        @click="toggleIssues"
+                        :class="{ 'bg-white! text-black': activePopover === 'issues' }"
+                        class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
+                    >
+                        <CircleDot />
+                    </button>
+                </Tooltip>
+
+                <div class="mt-auto flex flex-col gap-2">
+                    <Tooltip placement="right" text="Help" :offset="17">
+                        <button
+                            :class="{ 'bg-white! text-black': activePopover === 'help' }"
+                            class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
+                        >
+                            <CircleQuestionMark />
+                        </button>
+                    </Tooltip>
+
+                    <Tooltip placement="right" text="Settings" :offset="17">
+                        <button
+                            :class="{ 'bg-white! text-black': activePopover === 'settings' }"
+                            class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
+                        >
+                            <Settings />
+                        </button>
+                    </Tooltip>
                 </div>
-
-                <button
-                    @click="toggleChatbot"
-                    :class="{ 'bg-white! text-black': activePopover === 'chatbot' }"
-                    class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 hover:bg-neutral-700 rounded-md"
-                >
-                    <BotMessageSquare />
-                </button>
-
-                <button
-                    @click="toggleIssues"
-                    :class="{ 'bg-white! text-black': activePopover === 'issues' }"
-                    class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
-                >
-                    <CircleDot />
-                </button>
-
-                <button
-                    :class="{ 'bg-white! text-black': activePopover === 'help' }"
-                    class="transition mt-auto w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
-                >
-                    <CircleQuestionMark />
-                </button>
-
-                <button
-                    :class="{ 'bg-white! text-black': activePopover === 'settings' }"
-                    class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
-                >
-                    <Settings />
-                </button>
             </div>
 
             <!--<div class="absolute flex gap-2 top-4 left-[50%] -translate-x-[50%]">
@@ -149,6 +157,7 @@
     import Panel from "./components/Panel.vue"
     import FileExplorer from "./components/FileExplorer.vue"
     import { useRepoStateStore } from "./stores/repoState.js"
+    import Tooltip from "./components/Tooltip.vue"
 
     const repoStore = useRepoStateStore()
 

@@ -29,6 +29,7 @@
         "vite": "^7.1.10"
     },
     "dependencies": {
+        "@floating-ui/vue": "^1.1.9",
         "@highlightjs/vue-plugin": "^2.1.0",
         "@tailwindcss/vite": "^4.1.15",
         "d3": "^7.9.0",
