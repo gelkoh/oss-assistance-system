@@ -11,13 +11,6 @@
                 @target-issue="$emit('target-issue', $event)"
             />
         </div>
-
-        <button
-            @click="$emit('load-repo-issues')"
-            class="cursor-pointer px-4 py-2 bg-blue-600 rounded-sm hover:bg-blue-500 mt-6 self-start"
-        >
-            Fetch issues
-        </button>
     </div>
 
     <IssueDetails
@@ -44,9 +37,4 @@
     const viewIssue = (issue) => {
         repoStore.selectedIssue = issue
     }
-
-    /*const handleGoBackToIssuesList = () => {
-        issuesListVisible.value = true
-        selectedIssue.value = {}
-    }*/
 </script>

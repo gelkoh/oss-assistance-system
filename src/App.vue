@@ -118,11 +118,19 @@
                 @close-panel="closePanel"
                 width="w-240"
             >
+                <template v-slot:panelHeader>
+                    <button
+                        @click="loadRepoIssues"
+                        class="cursor-pointer h-11 px-3 flex items-center justify-center hover:bg-neutral-700 rounded-sm active:bg-neutral-600 gap-x-2"
+                    >
+                        <RefreshCw :size="18" /> Fetch Issues
+                    </button>
+                </template>
+
                 <Issues
                     :issues
                     :ownerName
                     :repoName
-                    @load-repo-issues="loadRepoIssues"
                 />
             </Panel>
         </div>
@@ -139,7 +147,7 @@
     import Issues from "./components/Issues.vue"
     import GetStarted from "./components/GetStarted.vue"
     import CloneRepositoryPopup from "./components/CloneRepositoryPopup.vue"
-    import { Home, CircleDot, Folder, BotMessageSquare, CircleQuestionMark, Settings, Trash } from "lucide-vue-next"
+    import { Home, CircleDot, Folder, BotMessageSquare, CircleQuestionMark, Settings, Trash, RefreshCw } from "lucide-vue-next"
     import Chatbot from "./components/Chatbot.vue"
     import Panel from "./components/Panel.vue"
     import FileExplorer from "./components/FileExplorer.vue"
