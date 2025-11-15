@@ -18,126 +18,143 @@
         </div>
 
         <div v-else>
-            <div class="flex p-2 flex-col gap-2 absolute top-0 h-screen left-0 bg-neutral-800">
-                <Tooltip placement="right" text="Home" :offset="17">
-                    <button @click="isHomeView = true" class="transition cursor-pointer flex items-center justify-center w-11 h-11 bg-neutral-800 rounded-md hover:bg-neutral-700">
-                        <Home />
-                    </button>
-                </Tooltip>
+            <div
+                v-if="isLoading"
+                class="absolute left-0 top-0 w-full h-full bg-black flex items-center justify-center"
+            >
+                <div>
+                    <div class="text-4xl font-bold text-center">Project loading ...</div>
 
-                <Tooltip placement="right" text="File Explorer" :offset="17">
-                    <button
-                        @click="toggleFileTree"
-                        :class="{ 'bg-white! text-black': activePopover === 'fileTree' }"
-                        class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
-                    >
-                        <Folder />
-                    </button>
-                </Tooltip>
-
-                <Tooltip placement="right" text="Chatbot" :offset="17">
-                    <button
-                        @click="toggleChatbot"
-                        :class="{ 'bg-white! text-black': activePopover === 'chatbot' }"
-                        class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 hover:bg-neutral-700 rounded-md"
-                    >
-                        <BotMessageSquare />
-                    </button>
-                </Tooltip>
-
-                <Tooltip placement="right" text="Issues" :offset="17">
-                    <button
-                        @click="toggleIssues"
-                        :class="{ 'bg-white! text-black': activePopover === 'issues' }"
-                        class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
-                    >
-                        <CircleDot />
-                    </button>
-                </Tooltip>
-
-                <div class="mt-auto flex flex-col gap-2">
-                    <Tooltip placement="right" text="Help" :offset="17">
-                        <button
-                            :class="{ 'bg-white! text-black': activePopover === 'help' }"
-                            class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
-                        >
-                            <CircleQuestionMark />
-                        </button>
-                    </Tooltip>
-
-                    <Tooltip placement="right" text="Settings" :offset="17">
-                        <button
-                            :class="{ 'bg-white! text-black': activePopover === 'settings' }"
-                            class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
-                        >
-                            <Settings />
-                        </button>
-                    </Tooltip>
+                    <progress
+                        :value="progress"
+                        max="100"
+                        class="block h-2 mt-10 w-100 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-neutral-800 [&::-webkit-progress-value]:bg-white"
+                    />
                 </div>
             </div>
 
-            <!--<div class="absolute flex gap-2 top-4 left-[50%] -translate-x-[50%]">
-                <button :class="{ 'bg-orange-500': isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = true">Canvas View</button>
-                <button :class="{ 'bg-orange-500': !isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = false">File View</button>
-            </div>-->
+            <template v-else>
+                <div class="flex p-2 flex-col gap-2 absolute top-0 h-screen left-0 bg-neutral-800">
+                    <Tooltip placement="right" text="Home" :offset="17">
+                        <button @click="isHomeView = true" class="transition cursor-pointer flex items-center justify-center w-11 h-11 bg-neutral-800 rounded-md hover:bg-neutral-700">
+                            <Home />
+                        </button>
+                    </Tooltip>
 
-            <Canvas :fileTree />
+                    <Tooltip placement="right" text="File Explorer" :offset="17">
+                        <button
+                            @click="toggleFileTree"
+                            :class="{ 'bg-white! text-black': activePopover === 'fileTree' }"
+                            class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
+                        >
+                            <Folder />
+                        </button>
+                    </Tooltip>
 
-            <!--<FileContents v-else :filePath="selectedFilePath" />-->
+                    <Tooltip placement="right" text="Chatbot" :offset="17">
+                        <button
+                            @click="toggleChatbot"
+                            :class="{ 'bg-white! text-black': activePopover === 'chatbot' }"
+                            class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 hover:bg-neutral-700 rounded-md"
+                        >
+                            <BotMessageSquare />
+                        </button>
+                    </Tooltip>
 
-            <Panel
-                v-if="activePopover === 'fileTree'"
-                :icon="Folder"
-                title="File Explorer"
-                panelId="fileTree"
-                @close-panel="closePanel"
-            >
-                <FileExplorer />
-            </Panel>
+                    <Tooltip placement="right" text="Issues" :offset="17">
+                        <button
+                            @click="toggleIssues"
+                            :class="{ 'bg-white! text-black': activePopover === 'issues' }"
+                            class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
+                        >
+                            <CircleDot />
+                        </button>
+                    </Tooltip>
 
-            <Panel
-                v-if="activePopover === 'chatbot'" 
-                :icon="BotMessageSquare"
-                title="Chatbot"
-                panelId="chatbot"
-                @close-panel="closePanel"
-                width="w-240"
-            >
-                <template v-slot:panelHeader>
-                    <button
-                        @click="repoStore.clearHistory()"
-                        class="cursor-pointer h-11 px-3 flex items-center justify-center hover:bg-neutral-700 rounded-sm active:bg-neutral-600 gap-x-2"
-                    >
-                        <Trash :size="18" /> Clear Chat
-                    </button>
-                </template>
+                    <div class="mt-auto flex flex-col gap-2">
+                        <Tooltip placement="right" text="Help" :offset="17">
+                            <button
+                                :class="{ 'bg-white! text-black': activePopover === 'help' }"
+                                class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
+                            >
+                                <CircleQuestionMark />
+                            </button>
+                        </Tooltip>
 
-                <Chatbot />
-            </Panel>
+                        <Tooltip placement="right" text="Settings" :offset="17">
+                            <button
+                                :class="{ 'bg-white! text-black': activePopover === 'settings' }"
+                                class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
+                            >
+                                <Settings />
+                            </button>
+                        </Tooltip>
+                    </div>
+                </div>
 
-            <Panel
-                v-if="activePopover === 'issues'"
-                :icon="CircleDot"
-                title="Issues"
-                panelId="issues"
-                @close-panel="closePanel"
-                width="w-240"
-            >
-                <template v-slot:panelHeader>
-                    <button
-                        @click="loadRepoIssues"
-                        class="cursor-pointer h-11 px-3 flex items-center justify-center hover:bg-neutral-700 rounded-sm active:bg-neutral-600 gap-x-2"
-                    >
-                        <RefreshCw :size="18" /> Fetch Issues
-                    </button>
-                </template>
+                <!--<div class="absolute flex gap-2 top-4 left-[50%] -translate-x-[50%]">
+                    <button :class="{ 'bg-orange-500': isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = true">Canvas View</button>
+                    <button :class="{ 'bg-orange-500': !isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = false">File View</button>
+                </div>-->
 
-                <Issues
-                    :issues
-                    :ownerName
-                    :repoName
-                />
-            </Panel>
+                <Canvas :fileTree />
+
+                <!--<FileContents v-else :filePath="selectedFilePath" />-->
+
+                <Panel
+                    v-if="activePopover === 'fileTree'"
+                    :icon="Folder"
+                    title="File Explorer"
+                    panelId="fileTree"
+                    @close-panel="closePanel"
+                >
+                    <FileExplorer />
+                </Panel>
+
+                <Panel
+                    v-if="activePopover === 'chatbot'" 
+                    :icon="BotMessageSquare"
+                    title="Chatbot"
+                    panelId="chatbot"
+                    @close-panel="closePanel"
+                    width="w-240"
+                >
+                    <template v-slot:panelHeader>
+                        <button
+                            @click="repoStore.clearHistory()"
+                            class="cursor-pointer h-11 px-3 flex items-center justify-center hover:bg-neutral-700 rounded-sm active:bg-neutral-600 gap-x-2"
+                        >
+                            <Trash :size="18" /> Clear Chat
+                        </button>
+                    </template>
+
+                    <Chatbot />
+                </Panel>
+
+                <Panel
+                    v-if="activePopover === 'issues'"
+                    :icon="CircleDot"
+                    title="Issues"
+                    panelId="issues"
+                    @close-panel="closePanel"
+                    width="w-240"
+                >
+                    <template v-slot:panelHeader>
+                        <button
+                            @click="loadRepoIssues"
+                            class="cursor-pointer h-11 px-3 flex items-center justify-center hover:bg-neutral-700 rounded-sm active:bg-neutral-600 gap-x-2"
+                        >
+                            <RefreshCw :size="18" /> Fetch Issues
+                        </button>
+                    </template>
+
+                    <Issues
+                        :issues
+                        :ownerName
+                        :repoName
+                    />
+                </Panel>
+            </template>
         </div>
     </div>
 </template>
@@ -181,6 +198,8 @@
 
     const activePopover = ref(null)
 
+    const progress = ref(0)
+
     const readRepoContents = async (path) => {
         console.log("readRepoContents path: " + path)
         console.log("typeof path: " + (typeof path))
@@ -210,7 +229,11 @@
 
             const modelName = "codellama"
 
-            /*for (const entry of analysis.analysisResults) {
+            console.log(analysis.analysisResults)
+
+            const analysisProgressStep = 1.0 / analysis.analysisResults.length
+
+            for (const entry of analysis.analysisResults) {
                 for (const chunk of entry.chunks) {
                     const userPromptContent = `
                         Analyze this code chunk from the repository. Focus on its primary function, inputs, and outputs.
@@ -234,7 +257,9 @@
 
                     console.log(botResponse)
                 }
-            }*/
+
+                progress.value += analysisProgressStep
+            }
 
             if (repoInfo && repoInfo.ownerName && repoInfo.repoName) {
                 ownerName.value = repoInfo.ownerName
