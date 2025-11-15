@@ -26,7 +26,6 @@
                 <div class="relative group/button">
                     <button
                         @click="toggleFileTree"
-                        ref="fileTreeButton"
                         :class="{ 'bg-white! text-black': activePopover === 'fileTree' }"
                         class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
                     >
@@ -40,7 +39,6 @@
 
                 <button
                     @click="toggleChatbot"
-                    ref="chatbotButton"
                     :class="{ 'bg-white! text-black': activePopover === 'chatbot' }"
                     class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 hover:bg-neutral-700 rounded-md"
                 >
@@ -49,7 +47,6 @@
 
                 <button
                     @click="toggleIssues"
-                    ref="issuesButton"
                     :class="{ 'bg-white! text-black': activePopover === 'issues' }"
                     class="transition w-11 h-11 cursor-pointer flex justify-center items-center bg-neutral-800 rounded-md hover:bg-neutral-700"
                 >
@@ -71,7 +68,7 @@
                 </button>
             </div>
 
-                     <!--<div class="absolute flex gap-2 top-4 left-[50%] -translate-x-[50%]">
+            <!--<div class="absolute flex gap-2 top-4 left-[50%] -translate-x-[50%]">
                 <button :class="{ 'bg-orange-500': isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = true">Canvas View</button>
                 <button :class="{ 'bg-orange-500': !isCanvasView }" class="px-4 py-2 bg-neutral-700" @click="isCanvasView = false">File View</button>
             </div>-->
@@ -172,14 +169,6 @@
     const repoName = ref(null)
 
     const isCloneRepositoryPopupVisible = ref(false)
-
-    const fileTreeButton = ref(null)
-    const chatbotButton = ref(null)
-    const issuesButton = ref(null)
-
-    const fileTreeVisible = ref(false)
-    const chatbotVisible = ref(false)
-    const issuesVisible = ref(false)
 
     const activePopover = ref(null)
 
