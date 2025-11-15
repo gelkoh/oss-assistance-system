@@ -248,6 +248,7 @@
             await repoStore.setFileTree(tree)
 
             const analysis = await window.api.processRepoFiles(tree.allFilePaths)
+            console.log(analysis)
 
             const modelName = "codellama"
 

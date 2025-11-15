@@ -21,6 +21,8 @@ const ollama = new Ollama({})
 const parser = new Parser()
 parser.setLanguage(JavaScript)
 
+const MAX_CHUNK_SIZE = 1000
+
 const readFileContents = async (filePath) => {
     try {
         const data = await readFile(filePath, "utf-8")
@@ -53,42 +55,68 @@ const getGrammar = (language) => {
 
 const performChunking = (tree, codeContent) => {
     const chunks = []
-
     let currentChunk = []
-
     const lines = codeContent.split("\n")
+
+    const lastLineNumber = tree.rootNode.child(tree.rootNode.childCount - 1)?.endPosition.row || lines.length
+    let totalTokenCount = 0
+
+    for (let i = 0; i < lastLineNumber; i++) {
+        totalTokenCount += lines[i].length
+    }
+
+    if (totalTokenCount <= MAX_CHUNK_SIZE) {
+          for (let i = 0; i < lastLineNumber; i++) {
+            currentChunk.push(lines[i])
+        }
+
+        const chunkString = currentChunk.join("\n")
+        const sanitizedChunkString = chunkString.replace(/[\t ]+/g, " ")
+
+        chunks.push(sanitizedChunkString)
+
+        return chunks;
+    }
+
     let currentTokenCount = 0
 
-    for (let i = 0; i < tree.rootNode.childCount; i++) {
-        // WENN GANZE FILE WENIGER ALS 1000 TOKENS, DANN PROBLEM
-        if (currentTokenCount > 1000) {
+    const childCount = tree.rootNode.childCount || 0
+
+    for (let i = 0; i < childCount; i++) {
+        const childNode = tree.rootNode.child(i)
+        if (!childNode) continue
+
+        const startLine = childNode.startPosition.row
+        const endLine = childNode.endPosition.row
+
+        let nextBlockTokens = 0
+        let nextBlockLines = []
+
+        for (let j = startLine; j < endLine; j++) {
+            if (lines[j] !== undefined) {
+                 nextBlockTokens += lines[j].length;
+                 nextBlockLines.push(lines[j]);
+            }
+        }
+
+        if (currentTokenCount + nextBlockTokens > MAX_CHUNK_SIZE && currentChunk.length > 0) {
             const chunkString = currentChunk.join("\n")
             const sanitizedChunkString = chunkString.replace(/[\t ]+/g, " ")
             chunks.push(sanitizedChunkString)
-
-            //chunks.push(currentChunk)
 
             currentChunk = []
             currentTokenCount = 0
         }
 
-        const startLine = tree.rootNode.child(i).startPosition.row
-        const endLine = tree.rootNode.child(i).endPosition.row
-
-        for (let j = startLine; j < endLine; j++) {
-            // Count tokens of current top level "code-group/function/whatever"
-            currentTokenCount += lines[j].length
-            currentChunk.push(lines[j])
-            //console.log("LINE " + j + ":" + lines[j])
-        }
-
-        
-        //console.log(tree.rootNode.child(i))
-        //console.log(startLine + ", " + endLine)
+        currentTokenCount += nextBlockTokens
+        currentChunk.push(...nextBlockLines)
     }
-    //console.log("TREE ROOT NODE: ", tree.rootNode.child(1))
-    //console.log("CODECONTENT: ", codeContent)
-                //const chunks = performChunking(tree, codeContent)
+
+    if (currentChunk.length > 0) {
+        const chunkString = currentChunk.join("\n")
+        const sanitizedChunkString = chunkString.replace(/[\t ]+/g, " ")
+        chunks.push(sanitizedChunkString)
+    }
 
     return chunks
 }
@@ -489,7 +517,6 @@ function createWindow() {
             if (err.message && err.message.includes("connect ECONNREFUSED")) {
                 throw new Error("Ollama server not reachable. Please start Ollama.")
             }
-
             if (err.message && err.message.includes("pull") || err.message.includes("not found")) {
                 throw new Error(`Model: '${model}' not found. Please run 'ollama pull ${model}'.`)
             }
@@ -510,7 +537,13 @@ function createWindow() {
                 parser.setLanguage(getGrammar(language))
 
                 const tree = parser.parse(codeContent)
-                const chunks = performChunking(tree, codeContent)
+
+                console.log("FILEPATH:", filePath)
+                let chunks = performChunking(tree, codeContent)
+                //console.log("CHUNKS:", chunks)
+                console.log("    ")
+                console.log("    ")
+                console.log("    ")
 
                 analysisResults.push({ filePath, status: "success", language: language, chunks: chunks })
             } catch(err) {
