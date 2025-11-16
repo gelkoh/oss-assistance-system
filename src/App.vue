@@ -259,41 +259,65 @@
                 totalChunkCount.value += entry.chunks.length
             }
 
+
+            const ANALYZE_PROJECT = false
+
             const analysisProgressStep = 1.0 / totalChunkCount.value
 
-            const messagesCollector = []
+            let messagesCollector = []
 
-            for (const entry of analysis.analysisResults) {
-                currentFileName.value = entry.filePath.split("/").at(-1)
+            if (ANALYZE_PROJECT) {
+                for (const entry of analysis.analysisResults) {
+                    currentFileName.value = entry.filePath.split("/").at(-1)
 
-                for (const chunk of entry.chunks) {
-                    const userPromptContent = `
-                        Analyze this code chunk from the repository. Focus on its primary function, inputs, and outputs.
+                    for (const chunk of entry.chunks) {
+                        const chunkPrompt = `
+                            Analyze this code chunk from the repository. Explain what it does.
 
-                        \`\`\`${entry.language}
-                        ${chunk}
-                        \`\`\`
+                            \`\`\`${entry.language}
+                            ${chunk}
+                            \`\`\`
 
-                        Provide a concise, single-paragraph summary.
+                            Provide a concise, single-paragraph summary.
+                        `.trim()
+
+                        const chunkMessages = [{
+                            role: "user",
+                            content: chunkPrompt
+                        }]
+
+                        const chunkSummary = await window.api.analyzeChunk(
+                            modelName,
+                            chunkMessages
+                        )
+
+                        messagesCollector.push(chunkSummary)
+
+                        currentChunkIndex.value += 1
+                        progress.value += analysisProgressStep
+                    }
+
+                    const filePrompt = `
+                        Summarize the primary function of this file based on its summarized code chunks.
+
+                        ${messagesCollector.join("\n")}
                     `.trim()
 
-                    const messages = [{
+                    const fileMessages = [{
                         role: "user",
-                        content: userPromptContent
+                        content: filePrompt
                     }]
 
-                    const botResponse = await window.api.analyzeChunk(
+                    const chunkSummary = await window.api.analyzeChunk(
                         modelName,
-                        messages
+                        fileMessages
                     )
 
-                    console.log(botResponse)
+                    console.log(chunkSummary)
 
-                    currentChunkIndex.value += 1
-                    progress.value += analysisProgressStep
+                    messagesCollector = []
+                    currentFileIndex.value += 1
                 }
-
-                currentFileIndex.value += 1
             }
 
             if (repoInfo && repoInfo.ownerName && repoInfo.repoName) {
