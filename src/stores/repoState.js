@@ -14,7 +14,7 @@ export const useRepoStateStore = defineStore('repoState', () => {
 
     const searchQuery = ref("")
 
-    const selectedIssue = ref({})
+    const currentlyViewedIssue = ref({})
 
     const currentTargetIssue = computed(() => {
         if (!targetedIssueId.value) return {}
@@ -121,7 +121,7 @@ export const useRepoStateStore = defineStore('repoState', () => {
         fileExplorerState,
         chatbotHistory,
 
-        selectedIssue,
+        currentlyViewedIssue,
 
         currentTargetIssue,
 

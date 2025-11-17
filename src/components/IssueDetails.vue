@@ -2,16 +2,16 @@
     <div class="flex flex-col h-full overflow-hidden">
         <div>
             <div class="flex items-center gap-x-4 mb-6">
-                <button @click="closeIssueDetails" class="w-11 h-11 flex items-center justify-center cursor-pointer rounded-sm p-1 flex items-center gap-1 hover:bg-neutral-700 border border-neutral-500 active:bg-neutral-600">
+                <button @click="closeIssue" class="w-11 h-11 flex items-center justify-center cursor-pointer rounded-sm p-1 flex items-center gap-1 hover:bg-neutral-700 border border-neutral-500 active:bg-neutral-600">
                     <ArrowLeft :size="18" class="inline-block" />
                 </button>
 
                 <div>
-                    <div class="font-bold text-xl">{{ repoStore.selectedIssue.title }}</div>
-                    <div>#{{ repoStore.selectedIssue.number }} by {{ repoStore.selectedIssue.user.login }}</div>
+                    <div class="font-bold text-xl">{{ repoStore.currentlyViewedIssue.title }}</div>
+                    <div>#{{ repoStore.currentlyViewedIssue.number }} by {{ repoStore.currentlyViewedIssue.user.login }}</div>
                 </div>
 
-                <button @click="repoStore.targetIssue(selectedIssue.id)" class="self-start mr-2 cursor-pointer ml-auto">
+                <button @click="repoStore.targetIssue(repoStore.currentlyViewedIssue.id)" class="self-start mr-2 cursor-pointer ml-auto">
                     <Target v-if="isCurrentlyTargeted" />
                     <Circle v-else class="text-neutral-500" />
                 </button>
@@ -52,15 +52,15 @@
 
     const repoStore = useRepoStateStore()
 
-    const closeIssueDetails = () => {
-        repoStore.selectedIssue = {}
+    const closeIssue = () => {
+        repoStore.currentlyViewedIssue = {}
     }
 
     const isCurrentlyTargeted = computed(() => {
-        return repoStore.selectedIssue.id === repoStore.targetedIssueId
+        return repoStore.currentlyViewedIssue.id === repoStore.targetedIssueId
     })
 
     const parsedIssueBody = computed(() => {
-        return useMarkdownParser(repoStore.selectedIssue.body)
+        return useMarkdownParser(repoStore.currentlyViewedIssue.body)
     })
 </script>

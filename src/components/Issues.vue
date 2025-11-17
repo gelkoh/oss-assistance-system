@@ -1,22 +1,18 @@
 <template>
-    <div v-if="Object.keys(repoStore.selectedIssue).length === 0" class="flex flex-col h-full overflow-hidden">
+    <div v-if="Object.keys(repoStore.currentlyViewedIssue).length === 0" class="flex flex-col h-full overflow-hidden">
         <div class="overflow-y-auto grow">
             <div class="text-lg font-bold">There are {{ issues.length }} open issues. Target an issue to pass it as context to the chatbot.</div>
 
             <Issue
                 v-if="issues.length > 0"
                 v-for="(issue, index) in issues"
-                :issue :key="index"
-                @view-issue="viewIssue"
-                @target-issue="$emit('target-issue', $event)"
+                :issue
+                :key="index"
             />
         </div>
     </div>
 
-    <IssueDetails
-        v-else
-        @target-issue="$emit('target-issue', $event)"
-    />
+    <IssueDetails v-else />
 </template>
 
 <script setup>
@@ -33,8 +29,4 @@
         ownerName: String,
         repoName: String
     })
-
-    const viewIssue = (issue) => {
-        repoStore.selectedIssue = issue
-    }
 </script>
