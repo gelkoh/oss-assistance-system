@@ -6,7 +6,7 @@
         <div class="flex gap-x-4 justify-between">
             <div>
                 <div
-                    @click="viewIssue"
+                    @click="repoStore.currentlyViewedIssue = issue"
                     class="hover:underline font-bold text-lg cursor-pointer inline-block"
                 >
                     {{ issue.title }}
@@ -44,8 +44,4 @@
     const isCurrentlyTargeted = computed(() => {
         return props.issue.id === repoStore.targetedIssueId
     })
-
-    const viewIssue = () => {
-        repoStore.currentlyViewedIssue = props.issue
-    }
 </script>

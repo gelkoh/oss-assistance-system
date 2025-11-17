@@ -3,14 +3,24 @@
         <div class="text-2xl font-bold">Recently used</div>
 
         <ul class="mt-2">
-            <li v-for="path in paths" :key="path" class="py-3 w-full border-b border-neutral-500">
-
+            <li
+                v-for="path in paths"
+                :key="path"
+                class="py-3 w-full border-b border-neutral-500"
+            >
                 <div class="flex gap-x-1 justify-between items-center">
-                    <button @click="$emit('open-recent-repository', path)" class="text-large font-bold cursor-pointer">
+                    <button
+                        @click="repoStore.readRepoContents(path)"
+                        class="text-large font-bold cursor-pointer"
+                    >
                         {{ path.split("/").at(-1) }}
                     </button>
 
-                    <button @click="removeRepository(path)" class="w-8 h-8 hover:bg-neutral-800 flex items-center justify-center rounded-full cursor-pointer">
+                    <button
+                        @click="removeRepository(path)"
+                        class="w-8 h-8 hover:bg-neutral-800 flex items-center
+                               justify-center rounded-full cursor-pointer"
+                    >
                         <X :size="18" />
                     </button>
                 </div>
@@ -24,6 +34,9 @@
 <script setup>
     import { ref, onMounted } from "vue"
     import { X } from "lucide-vue-next"
+    import { useRepoStateStore } from "../stores/repoState.js"
+
+    const repoStore = useRepoStateStore()
 
     const paths = ref([])
 

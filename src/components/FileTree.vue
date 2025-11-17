@@ -137,7 +137,6 @@
         isOpen.value = !isOpen.value
         originalIsOpen.value = isOpen.value
 
-        console.log("setDirectoryState: " + props.file.path + ", " + isOpen.value)
         repoStore.setDirectoryState(props.file.path, isOpen.value)
     }
 

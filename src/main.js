@@ -122,7 +122,6 @@ const performChunking = (tree, codeContent) => {
 }
 
 function buildTree(dirPath, currentDepth, allFilePathsCollector) {
-    console.log("CALLED BUILD TREE")
     const stats = fs.statSync(dirPath)
     if (!stats.isDirectory()) return []
 
@@ -145,15 +144,12 @@ function buildTree(dirPath, currentDepth, allFilePathsCollector) {
 
             try {
                 const gitFiles = fs.readdirSync(gitDirPath, { withFileTypes: true })
-                console.log("This is a git repository")
 
                 for (const gitFile of gitFiles) {
                     if (gitFile.name === "config" && gitFile.isFile()) {
                         const configPath = path.join(gitDirPath, gitFile.name)
 
                         const fileContents = fs.readFileSync(configPath, "utf-8")
-
-                        console.log("Git config file found")
 
                         const gitConfigLines = fileContents.split("\n")
 
@@ -222,8 +218,6 @@ function buildRepoTreeWrapper(repoPath) {
     const allFilePaths = []
 
     const children = buildTree(repoPath, 0, allFilePaths) || []
-    console.log("CHILDREN: ", children)
-    console.log("CHILDREN LENGTH: ", children.length)
 
     return {
         name: "root",
@@ -273,9 +267,6 @@ function createWindow() {
 
     ipcMain.handle("save-repository", async (event, repoPath) => {
         let recentlyUsedRepositoriesPaths = await settings.get("recentlyUsedRepositoriesPaths")
-        console.log("recentlyUsedRepositoriesPaths: " + recentlyUsedRepositoriesPaths)
-        console.log("repoPath: " + repoPath)
-        console.log("typeof repoPath: " + (typeof repoPath))
 
         if (recentlyUsedRepositoriesPaths === undefined) {
             recentlyUsedRepositoriesPaths = [repoPath]
@@ -287,14 +278,15 @@ function createWindow() {
     })
 
     ipcMain.handle("read-directory-tree", (event, repoPath) => {
-        console.log("Building tree directory for: ", repoPath)
-
-        currentRepoInfo = { ownerName: null, repoName: null }
+        currentRepoInfo = {
+            ownerName: null,
+            repoName: null
+        }
 
         try {
             const treeRoot = buildRepoTreeWrapper(repoPath)
-            console.log("Tree root:")
-            console.log(treeRoot)
+
+            console.log("CURRENT REPO INFO", currentRepoInfo)
 
             return {
                 fileTree: treeRoot,
@@ -319,7 +311,6 @@ function createWindow() {
     ipcMain.handle("get-recently-used-repositories", async () => {
         try {
             const recentlyUsedRepositoriesPaths = await settings.get("recentlyUsedRepositoriesPaths")
-            console.log("recentlyUsedRepositoriesPaths: " + recentlyUsedRepositoriesPaths)
             return recentlyUsedRepositoriesPaths
         } catch(err) {
             console.error("An error occurred getting the recently used repositories", err)
@@ -348,7 +339,6 @@ function createWindow() {
 
     ipcMain.handle("open-path", (event, filePath) => {
         try {
-            console.log("File to be opened: " + filePath)
             shell.openPath(filePath)
         }  catch(err) {
             console.error("An error occurred opening the file in the default file editor: ", err.message)
@@ -356,11 +346,11 @@ function createWindow() {
         }
     })
 
-    ipcMain.handle("fetch-repo-issues", async (event, { owner, repo }) => {
+    ipcMain.handle("fetch-issues", async (event, { owner, name }) => {
         try {
-            const response = await octokit.request("GET /repos/{owner}/{repo}/issues", {
+            const response = await octokit.request("GET /repos/{owner}/{name}/issues", {
                 owner: owner,
-                repo: repo,
+                name: name,
                 state: "open",
                 headers: {
                     "X-GitHub-Api-Version": "2022-11-28"
@@ -538,12 +528,7 @@ function createWindow() {
 
                 const tree = parser.parse(codeContent)
 
-                console.log("FILEPATH:", filePath)
                 let chunks = performChunking(tree, codeContent)
-                //console.log("CHUNKS:", chunks)
-                console.log("    ")
-                console.log("    ")
-                console.log("    ")
 
                 analysisResults.push({ filePath, status: "success", language: language, chunks: chunks })
             } catch(err) {

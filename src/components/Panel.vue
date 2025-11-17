@@ -13,7 +13,7 @@
                 <slot name="panelHeader" />
 
                 <button
-                    @click="$emit('close-panel', panelId)"
+                    @click="$emit('close-panel')"
                     class="w-11 h-11 flex justify-center items-center rounded-md cursor-pointer hover:bg-neutral-700"
                 >
                     <X />
@@ -36,10 +36,6 @@
             required: true
         },
         title: {
-            type: String,
-            required: true
-        },
-        panelId: {
             type: String,
             required: true
         },

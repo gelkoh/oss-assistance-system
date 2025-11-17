@@ -34,8 +34,9 @@
 <script setup>
     import { ref } from "vue"
     import { X, Folder } from "lucide-vue-next"
+    import { useRepoStateStore } from "../stores/repoState.js"
 
-    const emit = defineEmits(["cloning-successful"])
+    const repoStore = useRepoStateStore()
 
     const isCloning = ref(false)
     const repoUrl = ref(null)
@@ -56,7 +57,8 @@
             const result = await window.api.cloneRepository(url, localPath)
 
             alert(`Cloning successful! Path: ${result.path}`)
-            emit("cloning-successful", result.path)
+
+            repoStore.readRepoContents(result.path)
         } catch(error) {
             alert(`Error while cloning: ${error.message}`)
             console.error("Clone Error: ", error)
