@@ -44,10 +44,28 @@
             <div v-if="isProcessing" class="mt-4 loader"></div>
         </div>
 
+        <div class="sticky bottom-0 left-0 bg-neutral-800">
+            <div
+                class="flex items-center gap-x-2 px-4 py-1 text-sm rounded-t-md border-t border-l border-r border-neutral-500"
+                :class="[ repoStore.currentTargetIssue === null ? 'bg-orange-500/30' : 'bg-green-400/20' ]"
+            >
+                <template v-if="!repoStore.currentTargetIssue">
+                    <Info :size="14" class="inline-block" /> Go to the issues panel and target an issue to give the chatbot more context on what you're trying to do.
+                </template>
+
+                <template v-else>
+                    <CircleDot :size="14" class="inline-block" /> Targeted issue: {{ repoStore.currentTargetIssue.title }}
+                </template>
+            </div>
+
+            <div class="before:w-full before:h-14 before:absolute before:left-0 before:top-0 before:-translate-y-full
+                        before:bg-linear-to-t before:from-neutral-800/100 before:to-neutral-800/0 before:pointer-events-none before:-z-1"></div>
+        </div>
+
         <div
             class="sticky bottom-0 z-1 w-full bottom-0"
         >
-            <div class="border border-neutral-500 bg-neutral-700 pt-3 px-4 pb-11 rounded-md">
+            <div class="border border-neutral-500 bg-neutral-700 pt-3 px-4 pb-11 rounded-b-md">
                 <textarea
                     ref="textInput"
                     v-model="currentMessage"
@@ -70,16 +88,13 @@
                     <SendHorizontal />
                 </button>
             </div>
-
-            <div class="before:w-full before:h-14 before:absolute before:left-0 before:top-0 before:-translate-y-full
-                        before:bg-linear-to-t before:from-neutral-800/100 before:to-neutral-800/0 before:pointer-events-none before:-z-1"></div>
         </div>
     </div>
 </template>
 
 <script setup>
     import { ref, onMounted } from "vue"
-    import { SendHorizontal } from "lucide-vue-next"
+    import { Info, CircleDot, SendHorizontal } from "lucide-vue-next"
     import { useMarkdownParser } from "../composables/useMarkdownParser.js"
     import { useRepoStateStore } from "../stores/repoState.js"
 

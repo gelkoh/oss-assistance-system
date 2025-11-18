@@ -44,8 +44,8 @@ export const useRepoStateStore = defineStore('repoState', () => {
     const currentChatbotHistory = computed(() => chatbotHistory.value)
 
     const currentTargetIssue = computed(() => {
-        if (!targetedIssueId.value) return {}
-        return issues.value.find(i => i.id === targetedIssueId.value) || {}
+        if (!targetedIssueId.value) return null
+        return issues.value.find(i => i.id === targetedIssueId.value) || null
     })
 
     const getCurrentProgress = computed(() => progress.value)
