@@ -18,12 +18,29 @@
 @source inline("bg-pink-{600,950}");
 @source inline("bg-rose-{600,950}");
 
+@font-face {
+    font-family: "TASAExplorer";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("../assets/fonts/TASAExplorer/TASAExplorer-Regular.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "TASAExplorer";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("../assets/fonts/TASAExplorer/TASAExplorer-SemiBold.ttf") format("truetype");
+}
+
 html {
     color: white;
     background: black;
 }
 
 body {
+    font-family: "TASAExplorer", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     scrollbar-color: var(--color-neutral-500) var(--color-neutral-800);
 }
 
