@@ -65,7 +65,7 @@
         <div
             class="sticky bottom-0 z-1 w-full bottom-0"
         >
-            <div class="border border-neutral-500 bg-neutral-700 pt-3 px-4 pb-11 rounded-b-md">
+            <div class="border border-neutral-500 bg-neutral-700 py-3 px-4 rounded-b-md">
                 <textarea
                     ref="textInput"
                     v-model="currentMessage"
@@ -73,7 +73,7 @@
                     @keyup.enter="sendMessage"
                     :disabled="isProcessing"
                     placeholder="Enter a message"
-                    class="transition-[height] focus:outline-none resize-none w-full h-full min-h-[24px]"
+                    class="transition-[height] focus:outline-none resize-none w-full h-full min-h-[48px]"
                     rows="1"
                 />
 
@@ -81,12 +81,18 @@
 
                 </div>
 
-                <button
-                    @click="sendMessage"
-                    class="cursor-pointer absolute bottom-2 right-2 bg-neutral-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-neutral-500"
-                >
-                    <SendHorizontal />
-                </button>
+                <div class="mt-1 flex justify-between">
+                    <button class="cursor-pointer px-3 h-9 rounded-sm flex items-center justify-center hover:bg-neutral-500 gap-x-2">
+                        <BrainCircuit :size="18" /> Codellama
+                    </button>
+
+                    <button
+                        @click="sendMessage"
+                        class="cursor-pointer bg-neutral-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-neutral-500"
+                    >
+                        <SendHorizontal />
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -94,7 +100,7 @@
 
 <script setup>
     import { ref, onMounted } from "vue"
-    import { Info, CircleDot, SendHorizontal } from "lucide-vue-next"
+    import { Info, CircleDot, SendHorizontal, BrainCircuit } from "lucide-vue-next"
     import { useMarkdownParser } from "../composables/useMarkdownParser.js"
     import { useRepoStateStore } from "../stores/repoState.js"
 
