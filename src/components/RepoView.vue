@@ -106,7 +106,7 @@
             Not implemented yet
         </Panel>
 
-        <!--<Canvas :fileTree />-->
+        <Canvas />
     </div>
 </template>
 
