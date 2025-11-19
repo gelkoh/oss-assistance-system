@@ -286,8 +286,6 @@ function createWindow() {
         try {
             const treeRoot = buildRepoTreeWrapper(repoPath)
 
-            console.log("CURRENT REPO INFO", currentRepoInfo)
-
             return {
                 fileTree: treeRoot,
                 repoInfo: currentRepoInfo
@@ -456,7 +454,24 @@ function createWindow() {
     })
 
     ipcMain.handle("send-chatbot-message", async (event, { model, chatHistory }) => {
-        const messages = [...chatHistory];
+        const messages = chatHistory.map(msg => {
+            let contentString = ''
+
+            if (typeof msg.content === 'string') {
+                contentString = msg.content
+            }
+            else if (typeof msg.content === 'object' && msg.content !== null && typeof msg.content.text === 'string') {
+                contentString = msg.content.text
+            }
+            else if (Array.isArray(msg.content)) {
+                contentString = msg.content.map(c => typeof c === 'string' ? c : (c.text || '')).join('\n')
+            }
+
+            return {
+                role: msg.role,
+                content: String(msg.content) || ''
+            }
+        })
 
         try {
             console.log(`Sending prompt to Ollama model ${model}...`);
@@ -469,7 +484,6 @@ function createWindow() {
 
             for await (const chunk of responseStream) {
                 if (chunk.message && chunk.message.content) {
-                    console.log(chunk.message.content)
                     event.sender.send("chatbot-response-chunk", chunk.message.content)
                 }
             }
@@ -497,6 +511,8 @@ function createWindow() {
 
     ipcMain.handle("abort-chatbot-response", async (event) => {
         ollama.abort()
+        event.sender.send("chatbot-response-aborted")
+        console.log("Chatbot response aborted")
     })
 
     ipcMain.handle("loadRepoState", async (event, repoPath) => {

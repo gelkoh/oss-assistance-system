@@ -11,7 +11,12 @@
 
             <div v-for="(message, index) in repoStore.currentChatbotHistory" :key="index" class="flex flex-col">
                 <div v-if="message.sender === 'assistant'">
-                    <template v-if="message.status === 'success'" v-for="part in useMarkdownParser(currentAnswer)" :key="part.id">
+                    <template
+                        v-if="message.status === 'success' ||
+                              message.status === 'processing'" 
+                        v-for="part in useMarkdownParser(message.text)"
+                        :key="part.id"
+                    >
                         <div v-if="part.type === 'paragraph'" class="mt-4">
                             <template v-for="(subPart, subIndex) in part.content" :key="subIndex">
                                 <span v-if="subPart.type === 'text'">{{ subPart.content }}</span>
@@ -33,7 +38,20 @@
                         />
                     </template>
 
-                    <div v-else class="text-bold text-red-500">{{ message.text }}</div>
+                    <div
+                        v-else-if="message.status === 'aborted'"
+                        class="mt-4 text-bold text-neutral-500"
+                    >
+                        {{ message.text }}
+                        <div>(Generation aborted!)</div>
+                    </div>
+
+                    <div
+                        v-else
+                        class="mt-4 text-bold text-red-500"
+                    >
+                        {{ message.text }}
+                    </div>
                 </div>
 
                 <div v-else class="mt-4 bg-neutral-700 rounded-md self-end p-3">
@@ -86,17 +104,24 @@
                         <BrainCircuit :size="18" /> Codellama
                     </button>
 
-                    <button
-                        @click="sendMessage"
-                        class="cursor-pointer bg-neutral-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-neutral-500"
-                    >
-                        <SendHorizontal />
-                    </button>
-                </div>
+                    <div>
+                        <button
+                            v-if="!isProcessing"
+                            @click="sendMessage"
+                            class="cursor-pointer bg-neutral-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-neutral-500"
+                        >
+                            <SendHorizontal />
+                        </button>
 
-                <button @click="abortChatbotResponse">
-                    Cancel
-                </button>
+                        <button
+                            v-else
+                            @click="abortChatbotResponse"
+                            class="cursor-pointer bg-neutral-600 w-9 h-9 rounded-sm flex items-center justify-center hover:bg-neutral-500"
+                        >
+                            <Square fill="#fff" />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -104,7 +129,7 @@
 
 <script setup>
     import { ref, onMounted, computed } from "vue"
-    import { Info, CircleDot, SendHorizontal, BrainCircuit } from "lucide-vue-next"
+    import { Info, CircleDot, SendHorizontal, BrainCircuit, Square } from "lucide-vue-next"
     import { useMarkdownParser } from "../composables/useMarkdownParser.js"
     import { useRepoStateStore } from "../stores/repoState.js"
 
@@ -116,22 +141,30 @@
     const textInput = ref(null)
     const textInputCopy = ref(null)
 
-    const currentAnswer = ref("")
-
     onMounted(() => {
         window.api.onChatbotResponseChunk((contentChunk) => {
-            currentAnswer.value += contentChunk
+            const history = repoStore.currentChatbotHistory
+
+            if (history.length > 0) {
+                const lastMessage = history[history.length - 1]
+
+                if (lastMessage.sender === "assistant" && lastMessage.status === "processing") {
+                    lastMessage.text += contentChunk
+                }
+            }
         })
-    })
 
-    const parsedContent = computed(() => {
-        const answer = currentAnswer.value;
+        window.api.onChatbotResponseAborted(() => {
+            const history = repoStore.currentChatbotHistory
 
-        if (!answer || typeof answer !== "string") {
-            return []
-        }
+            if (history.length > 0) {
+                const lastMessage = history[history.length - 1]
 
-        return useMarkdownParser(answer)
+                if (lastMessage.sender === "assistant" && lastMessage.status === "processing") {
+                    lastMessage.status = "aborted"
+                }
+            }
+        })
     })
 
     const sendMessage = async (event) => {
@@ -143,20 +176,22 @@
         if (!currentMessage.value.trim()) return
 
         const userPrompt = currentMessage.value.trim()
-        console.log("User prompt: ", userPrompt)
+
         repoStore.currentChatbotHistory.push({ sender: "user", text: userPrompt })
         currentMessage.value = ""
+
         isProcessing.value = true
 
         const rawChatbotHistory = JSON.parse(JSON.stringify(repoStore.currentChatbotHistory))
 
         const currentTargetIssue = repoStore.currentTargetIssue
+
         let currentTargetIssueBody
 
         if (currentTargetIssue.body) {
             currentTargetIssueBody = currentTargetIssue.body
         } else {
-            currentTargetIssueBody = null
+            currentTargetIssueBody = ""
         }
 
         const issueMessage = {
@@ -174,15 +209,34 @@
 
         const currentChatbotHistory = repoStore.currentChatbotHistory
 
+        const newBotMessageIndex = currentChatbotHistory.length;
+        currentChatbotHistory.push({ sender: "assistant", text: "", status: "processing" }); // status: processing
+
         try {
-            const botResponse = await window.api.sendChatbotMessage(
+            console.log("Chatbot history array: ", chatbotHistoryArray)
+            await window.api.sendChatbotMessage(
                 modelName,
                 chatbotHistoryArray
             )
 
-            currentChatbotHistory[currentChatbotHistory.length] = { sender: "assistant", text: botResponse, status: "success" }
+            currentChatbotHistory[newBotMessageIndex].status = "success";
         } catch(err) {
-            repoStore.currentChatbotHistory[repoStore.currentChatbotHistory.length] = { sender: "assistant", text: `[ERROR] ${err.message}`, status: "error" }
+            if (err.message && err.message.includes("Chatbot generation aborted by user")) {
+                console.log("Aborted successfully caught in sendMessage.")
+                
+                if (currentChatbotHistory[newBotMessageIndex].status === "processing") {
+                    currentChatbotHistory[newBotMessageIndex].status = "aborted";
+                }
+
+                return
+            }
+
+            if (currentChatbotHistory[newBotMessageIndex].status === "processing") {
+                currentChatbotHistory[newBotMessageIndex].text += `\n\n[ERROR] ${err.message}`;
+                currentChatbotHistory[newBotMessageIndex].status = "error";
+            } else {
+                repoStore.currentChatbotHistory.push({ sender: "assistant", text: `[ERROR] ${err.message}`, status: "error" });
+            }
         } finally {
             isProcessing.value = false
 
@@ -222,5 +276,6 @@
 
     const abortChatbotResponse = () => {
         window.api.abortChatbotResponse()
+        isProcessing.value = false
     }
 </script>
