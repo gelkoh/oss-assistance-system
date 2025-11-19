@@ -188,7 +188,7 @@
 
         let currentTargetIssueBody
 
-        if (currentTargetIssue.body) {
+        if (currentTargetIssue && currentTargetIssue.body) {
             currentTargetIssueBody = currentTargetIssue.body
         } else {
             currentTargetIssueBody = ""
