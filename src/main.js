@@ -456,17 +456,25 @@ function createWindow() {
     })
 
     ipcMain.handle("send-chatbot-message", async (event, { model, chatHistory }) => {
-        const messages = [...chatHistory]
+        const messages = [...chatHistory];
 
         try {
-            console.log(`Sending prompt to Ollama model ${model}...`)
+            console.log(`Sending prompt to Ollama model ${model}...`);
 
-            const response = await ollama.chat({
+            const responseStream = await ollama.chat({
                 model: model,
-                messages: messages
+                messages: messages,
+                stream: true
             })
 
-            return response.message.content.trim()
+            for await (const chunk of responseStream) {
+                if (chunk.message && chunk.message.content) {
+                    console.log(chunk.message.content)
+                    event.sender.send("chatbot-response-chunk", chunk.message.content)
+                }
+            }
+
+            return { success: true, message: "Stream finished." }
         } catch(err) {
             console.error("Error communicating with Ollama: ", err)
 
@@ -478,8 +486,17 @@ function createWindow() {
                 throw new Error(`Model: '${model}' not found. Please run 'ollama pull ${model}'.`)
             }
 
+            if (err.name === "AbortError") {
+                event.sender.send('chatbot-response-aborted')
+                throw new Error("Chatbot generation aborted by user.")
+            }
+
             throw new Error(`Chatbot error: ${err.message}`)
         }
+    })
+
+    ipcMain.handle("abort-chatbot-response", async (event) => {
+        ollama.abort()
     })
 
     ipcMain.handle("loadRepoState", async (event, repoPath) => {

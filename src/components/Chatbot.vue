@@ -11,7 +11,7 @@
 
             <div v-for="(message, index) in repoStore.currentChatbotHistory" :key="index" class="flex flex-col">
                 <div v-if="message.sender === 'assistant'">
-                    <template v-if="message.status === 'success'" v-for="(part, index) in useMarkdownParser(message.text)" :key="index">
+                    <template v-if="message.status === 'success'" v-for="part in useMarkdownParser(currentAnswer)" :key="part.id">
                         <div v-if="part.type === 'paragraph'" class="mt-4">
                             <template v-for="(subPart, subIndex) in part.content" :key="subIndex">
                                 <span v-if="subPart.type === 'text'">{{ subPart.content }}</span>
@@ -93,13 +93,17 @@
                         <SendHorizontal />
                     </button>
                 </div>
+
+                <button @click="abortChatbotResponse">
+                    Cancel
+                </button>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-    import { ref, onMounted } from "vue"
+    import { ref, onMounted, computed } from "vue"
     import { Info, CircleDot, SendHorizontal, BrainCircuit } from "lucide-vue-next"
     import { useMarkdownParser } from "../composables/useMarkdownParser.js"
     import { useRepoStateStore } from "../stores/repoState.js"
@@ -112,7 +116,23 @@
     const textInput = ref(null)
     const textInputCopy = ref(null)
 
-    const parsedChatbotMessage = ref("")
+    const currentAnswer = ref("")
+
+    onMounted(() => {
+        window.api.onChatbotResponseChunk((contentChunk) => {
+            currentAnswer.value += contentChunk
+        })
+    })
+
+    const parsedContent = computed(() => {
+        const answer = currentAnswer.value;
+
+        if (!answer || typeof answer !== "string") {
+            return []
+        }
+
+        return useMarkdownParser(answer)
+    })
 
     const sendMessage = async (event) => {
         if (event.shiftKey) {
@@ -198,5 +218,9 @@
         if (textInputCopy.value.offsetHeight + extraHeight <= MAX_INPUT_HEIGHT) {
             textInput.value.style.height = textInputCopy.value.offsetHeight + extraHeight + "px"
         }
+    }
+
+    const abortChatbotResponse = () => {
+        window.api.abortChatbotResponse()
     }
 </script>
