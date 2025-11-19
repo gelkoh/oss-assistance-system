@@ -1,24 +1,34 @@
 <template>
-    <div>
+    <div class="p-8 bg-neutral-800 rounded-lg">
         <div class="text-2xl font-bold">Recently used</div>
 
-        <ul class="mt-2">
+        <div
+            v-if="paths.length === 0"
+            class="mt-4"
+        >
+            You have no recently used projects
+        </div>
+
+        <ul
+            v-else
+            class="mt-6 flex flex-col gap-4"
+        >
             <li
                 v-for="path in paths"
                 :key="path"
-                class="py-3 w-full border-b border-neutral-500"
+                class="p-3 w-full bg-neutral-700 rounded-md hover:bg-neutral-600"
             >
                 <div class="flex gap-x-1 justify-between items-center">
                     <button
                         @click="repoStore.readRepoContents(path)"
-                        class="text-large font-bold cursor-pointer"
+                        class="text-large font-bold cursor-pointer hover:underline"
                     >
                         {{ path.split("/").at(-1) }}
                     </button>
 
                     <button
                         @click="removeRepository(path)"
-                        class="w-8 h-8 hover:bg-neutral-800 flex items-center
+                        class="w-8 h-8 hover:bg-neutral-500 flex items-center
                                justify-center rounded-full cursor-pointer"
                     >
                         <X :size="18" />

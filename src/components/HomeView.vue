@@ -1,5 +1,5 @@
 <template>
-    <div class="flex justify-center items-center flex-col mt-40">
+    <div class="pt-50 flex justify-center items-center flex-col h-screen">
         <h1 class="text-2xl text-white">Open source assistance system</h1>
 
         <div class="text-6xl text-center font-bold text-white">
@@ -19,6 +19,15 @@
             v-if="isCloneRepositoryPopupVisible"
             @hide-clone-repository-popup="isCloneRepositoryPopupVisible = false"
         />
+
+        <a
+            target="_blank"
+            href="https://github.com/gelkoh/oss-assistance-system"
+            title="Link to the GitHub repository of this project"
+            class="flex items-center gap-x-2 cursor-pointer px-4 py-2 mt-auto mb-4 bg-neutral-800 hover:bg-neutral-700 rounded-md"
+        >
+            <Github :size="18" class="inline-block" /> Source Code
+        </a>
     </div>
 </template>
 
@@ -28,6 +37,7 @@
     import GetStarted from "../components/GetStarted.vue"
     import CloneRepositoryPopup from "../components/CloneRepositoryPopup.vue"
     import { useRepoStateStore } from "../stores/repoState.js"
+    import { Github } from "lucide-vue-next"
 
     const repoStore = useRepoStateStore()
 

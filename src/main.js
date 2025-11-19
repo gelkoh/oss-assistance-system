@@ -253,6 +253,11 @@ function createWindow() {
         win.loadFile(indexPath)
     }
 
+    win.webContents.on("new-window", function(e, url) {
+        e.preventDefault();
+        require('electron').shell.openExternal(url);
+    })
+
     ipcMain.on("open-directory-dialog", async(event) => {
         const result = await dialog.showOpenDialog(win, {
             properties: ["openDirectory"]
