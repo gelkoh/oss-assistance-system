@@ -309,6 +309,7 @@ export const useRepoStateStore = defineStore('repoState', () => {
         setDirectoryState,
 
         issues,
+        fetchIssues,
         currentlyViewedIssue,
         currentTargetIssue,
         targetIssue,
